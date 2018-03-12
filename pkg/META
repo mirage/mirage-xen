@@ -1,0 +1,9 @@
+version = "%%VERSION_NUM%%"
+description = "Library support for the Mirage/Xen backend"
+requires = "lwt cstruct xen-evtchn xen-gnt xenstore.client shared-memory-ring-lwt mirage-profile logs io-page-xen"
+archive(byte) = "oS.cma"
+plugin(byte) = "oS.cma"
+archive(native) = "oS.cmxa"
+plugin(native) = "oS.cmxs"
+exists_if = "oS.cma"
+
