@@ -1,3 +1,5 @@
+## 3.0.6 (2018-03-13)
+
 * switched build system to topkg and ocamlbuild
 * separated from mirage-platform into a custom repository, mirage-xen
 
