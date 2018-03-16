@@ -15,6 +15,8 @@
  */
 
 #include <caml/mlvalues.h>
+#include <caml/alloc.h>
+#include <caml/memory.h>
 #include <mini-os/mm.h>
 
 CAMLprim value
@@ -27,4 +29,16 @@ CAMLprim value
 stub_heap_get_pages_used(value unit) // noalloc
 {
   return Val_long(minios_heap_pages_used);
+}
+
+/* expose the virt_to_mfn macro for converting a "virtual address number"
+ * (AKA "a pointer") to a machine frame number
+*/
+CAMLprim value
+stub_virt_to_mfn(value page)
+{
+  CAMLparam1(page);
+  CAMLlocal1(result);
+  result = caml_copy_nativeint(virt_to_mfn(Nativeint_val(page)));
+  CAMLreturn(result);
 }
