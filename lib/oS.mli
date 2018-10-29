@@ -208,3 +208,16 @@ module Start_info : sig
   (** [xenstore_start_page ()] is the xenstore page automatically
       allocated by Xen. *)
 end
+
+module Xen : sig
+  (** Some more Xen-specific that is neither part of scheduling
+      nor startup info, and not tied to xenstore either. *)
+
+  val virt_to_mfn : nativeint -> nativeint
+  (** Convert a Xen virtual addr ["va"] to [MFN]
+    - This is a binding to Xen mini-os [virt_to_mfn()];
+    - The inverse function in minios is [__mfn_to_virt].
+    - example use: [OS.MM.virt_to_mfn (Io_page.get_addr your_io_page_t)]
+    - see https://xenbits.xen.org/docs/xtf/mm_8h_source.html
+      and https://wiki.xenproject.org/wiki/XenTerminology *)
+end
