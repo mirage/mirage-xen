@@ -1,9 +1,9 @@
-opam-version: "1.2"
+opam-version: "2.0"
 maintainer:   "anil@recoil.org"
 authors:      "The MirageOS team"
 homepage:     "https://github.com/mirage/mirage-xen"
 bug-reports:  "https://github.com/mirage/mirage-xen/issues/"
-dev-repo:     "https://github.com/mirage/mirage-xen.git"
+dev-repo:     "git+https://github.com/mirage/mirage-xen.git"
 doc:          "https://mirage.github.io/mirage-xen/doc"
 license:      "ISC"
 tags:         ["org:mirage"]
@@ -14,6 +14,7 @@ depends: [
   "ocamlfind" {build}
   "ocamlbuild" {build}
   "topkg" {build & >= "0.7.6"}
+  "ocaml" {>= "4.04.2"}
   "ocb-stubblr" {build}
   "cstruct" {>= "1.0.1"}
   "lwt" {>= "2.4.3"}
@@ -28,4 +29,10 @@ depends: [
   "mirage-xen-minios" {>= "0.7.0"}
   "logs"
 ]
-available: [ ocaml-version >= "4.04.2" & os = "linux" ]
+available: [ os = "linux" ]
+synopsis: "Xen core platform libraries for MirageOS"
+description: """
+This package provides the MirageOS `OS` library for
+Xen targets, which handles the main loop and timers.  It also provides
+the low level C startup code and C stubs required by the OCaml code.
+"""

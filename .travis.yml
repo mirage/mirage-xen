@@ -8,6 +8,7 @@ env:
         - TESTS=false
         - PACKAGE="mirage-xen"
         - REVDEPS=*
+        - EXTRA_REMOTES="https://github.com/mirage/mirage-dev.git"
     matrix:
         - OCAML_VERSION=4.05
         - OCAML_VERSION=4.04
