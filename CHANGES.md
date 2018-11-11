@@ -1,3 +1,9 @@
+## 3.1.0 (2018-11-11)
+
+* bind minios function `virt_to_mfn` (@cfcs, #4)
+* remove OS.Env module (@hannesm, #6)
+* update to opam2
+
 ## 3.0.6 (2018-03-13)
 
 * switched build system to topkg and ocamlbuild
