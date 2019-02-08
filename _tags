@@ -1,7 +1,0 @@
-true: annot, bin_annot, principal, custom
-<myocamlbuild.ml>: package(ocb-stubblr)
-<lib/*>: package(lwt cstruct logs xen-evtchn xen-gnt xenstore.client shared-memory-ring-lwt mirage-profile)
-<lib/*.cm{x,o}> and not <lib/oS.cmx>: for-pack(OS)
-<lib/bindings/*.c>: pkg-config(mirage-xen-ocaml)
-<lib/bindings/*.c> : ccopt(-O2 -Wall)
-<lib/bindings/{barrier_stubs.c,eventchn_stubs.c,exit_stubs.c,gnttab_stubs.c,main.c,sched_stubs.c,start_info_stubs.c,xb_stubs.c,mm_stubs.c}>: pkg-config(mirage-xen-minios)

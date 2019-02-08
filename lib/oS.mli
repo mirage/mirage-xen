@@ -175,7 +175,7 @@ module Start_info : sig
     console_mfn: int; (** MACHINE page number of console page. *)
     console_evtchn: int; (** Event channel for console page. *)
 
-    (** THE FOLLOWING ARE ONLY FILLED IN ON INITIAL BOOT (NOT RESUME). *)
+    (* THE FOLLOWING ARE ONLY FILLED IN ON INITIAL BOOT (NOT RESUME). *)
     pt_base: int; (** VIRTUAL address of page directory. *)
     nr_pt_frames: int; (** Number of bootstrap p.t. frames. *)
     mfn_list: int; (** VIRTUAL address of page-frame list. *)
