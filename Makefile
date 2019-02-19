@@ -11,3 +11,9 @@ clean:
 
 doc:
 	dune build @doc
+
+distrib:
+	dune-release distrib
+
+release:
+	dune-release
