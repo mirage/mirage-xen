@@ -24,7 +24,6 @@ module IO = struct
     }
     let return = Lwt.return
     let (>>=) = Lwt.bind
-    exception Already_connected
     exception Cannot_destroy
 
     let h = Eventchn.init ()
@@ -55,7 +54,7 @@ module IO = struct
         Eventchn.unmask h x.evtchn
       | None -> ()
 
-    let destroy t =
+    let destroy _ =
       Printf.printf "ERROR: It's not possible to destroy the default xenstore connection\n%!";
       fail Cannot_destroy
 

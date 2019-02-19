@@ -1,3 +1,7 @@
+## dev
+
+* Port build to dune from ocamlbuild (@avsm)
+
 ## 3.1.0 (2018-11-11)
 
 * bind minios function `virt_to_mfn` (@cfcs, #4)

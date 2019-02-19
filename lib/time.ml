@@ -23,6 +23,7 @@
  * 02111-1307, USA.
  *)
 
+[@@@warning "-3-9"] (* FIXME Lwt_pqueue *)
 open Lwt
 
 type +'a io = 'a Lwt.t
@@ -98,11 +99,6 @@ let rec restart_threads now =
 (* +-----------------------------------------------------------------+
    | Event loop                                                      |
    +-----------------------------------------------------------------+ *)
-
-let min_timeout a b = match a, b with
-  | None, b -> b
-  | a, None -> a
-  | Some a, Some b -> Some(min a b)
 
 let rec get_next_timeout () =
   match SleepQueue.lookup_min !sleep_queue with
