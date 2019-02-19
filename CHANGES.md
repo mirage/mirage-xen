@@ -1,6 +1,6 @@
-## dev
+## v3.2.0 (2019-02-16)
 
-* Port build to dune from ocamlbuild (@avsm)
+* Port build to dune from ocamlbuild (#8 @avsm)
 
 ## 3.1.0 (2018-11-11)
 
