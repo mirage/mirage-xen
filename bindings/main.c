@@ -26,6 +26,8 @@
 #include <caml/memory.h>
 #include <caml/callback.h>
 
+extern void gnttab_init(void);
+
 void _exit(int);
 int errno;
 static char *argv[] = { "mirage", NULL };
@@ -83,7 +85,7 @@ void start_kernel(void)
   init_console();
 
   /* Init grant tables. */
-  init_gnttab();
+  gnttab_init();
 
   /* Call our main function directly, without using Mini-OS threads. */
   app_main_thread(NULL);
