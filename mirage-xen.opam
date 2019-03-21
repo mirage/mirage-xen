@@ -27,6 +27,7 @@ depends: [
   "io-page-xen" {>= "2.0.0"}
   "mirage-xen-minios" {>= "0.7.0"}
   "logs"
+  "fmt"
 ]
 available: [ os = "linux" ]
 synopsis: "Xen core platform libraries for MirageOS"

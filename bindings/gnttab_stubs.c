@@ -16,6 +16,10 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+/* Note: these stubs are currently used by both OS.Xen and xen-gnt's Gnt module.
+   Once xen-gnt stops using them, they can be cleaned up and unused ones removed.
+ */
+
 #include <mini-os/os.h>
 #include <mini-os/mm.h>
 #include <mini-os/gnttab.h>
@@ -45,21 +49,22 @@ extern grant_entry_t *gnttab_table;
 CAMLprim value stub_gnttab_interface_open(value unit)
 {
 	CAMLparam1(unit);
-	CAMLlocal1(result);
-	if (!map) {
-		/* FIXME: this should be done inside mini-os kernel.c */
-		map = (struct gntmap*) malloc(sizeof(struct gntmap));
-		gntmap_init(map);
-		printk("initialised mini-os gntmap\n");
-	}
-	result = Val_unit;
-	CAMLreturn(result);
+	CAMLreturn(Val_unit);
 }
 
 CAMLprim value stub_gnttab_interface_close(value unit)
 {
 	CAMLparam1(unit);
 	CAMLreturn(Val_unit);
+}
+
+void gnttab_init(void)
+{
+	init_gnttab();
+	/* FIXME: this should be done inside mini-os kernel.c */
+	map = (struct gntmap*) malloc(sizeof(struct gntmap));
+	gntmap_init(map);
+	printk("initialised mini-os gntmap\n");
 }
 
 CAMLprim value stub_gnttab_allocates(void)
@@ -234,6 +239,14 @@ stub_gntshr_end_access(value v_ref)
     gnttab_end_access(ref);
 
     return Val_unit;
+}
+
+CAMLprim value
+stub_gntshr_try_end_access(value v_ref)
+{
+    CAMLparam1(v_ref);
+    grant_ref_t ref = Int_val(v_ref);
+    CAMLreturn(Val_bool(gnttab_end_access(ref)));
 }
 
 CAMLprim value stub_gntshr_share_pages_batched(value xgh, value domid, value count, value writable) {

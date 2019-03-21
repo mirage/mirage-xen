@@ -35,12 +35,10 @@ let suspend () =
   >>= fun xs_client ->
   Xs.suspend xs_client
   >>= fun () ->
-  Gnt.suspend ();
 
   let result = _suspend () in
 
   Generation.resume ();
-  Gnt.resume ();
   Activations.resume ();
   Xs.resume xs_client
   >>= fun () ->
