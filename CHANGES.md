@@ -1,3 +1,7 @@
+## v3.3.0 (2019-03-22)
+
+* Add grant-handling code to OS.Xen (#9, by @talex5)
+
 ## v3.2.0 (2019-02-16)
 
 * Port build to dune from ocamlbuild (#8 @avsm)
