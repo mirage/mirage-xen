@@ -114,6 +114,11 @@ module Export = struct
   let refs t = t.refs
   let mapping t = t.mapping
 
+  (* The functions in Gnt are now deprecated so that people use mirage-xen instead.
+     Once they've been removed completely we can move the functions here, remove this,
+     and conflict with older versions of xen-gnt. *)
+  [@@@ocaml.warning "-3"]
+
   let put = Gnt.Gntshr.put
   let num_free_grants = Gnt.Gntshr.num_free_grants
   let get = Gnt.Gntshr.get
@@ -133,6 +138,8 @@ module Export = struct
   let get_nonblock = Gnt.Gntshr.get_nonblock
 
   let get_n_nonblock = Gnt.Gntshr.get_n_nonblock
+
+  [@@@ocaml.warning "+3"]
 
   let with_ref f =
     get ()
