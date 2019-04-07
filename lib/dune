@@ -2,4 +2,4 @@
  (name oS)
  (public_name mirage-xen)
  (wrapped true)
- (libraries lwt cstruct xen-evtchn xen-gnt xenstore.client shared-memory-ring-lwt mirage-profile logs io-page-xen fmt))
+ (libraries lwt cstruct xen-evtchn xenstore.client shared-memory-ring-lwt mirage-profile logs io-page-xen fmt))
