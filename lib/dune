@@ -1,5 +1,14 @@
 (library
  (name oS)
- (public_name mirage-xen)
+ (public_name mirage-xen.internals)
  (wrapped true)
+ (modules activations device_state lifecycle main mM oS sched start_info time xen xenctrl xs)
  (libraries lwt cstruct xen-evtchn xenstore.client shared-memory-ring-lwt mirage-profile logs io-page-xen fmt mirage-xen.bindings))
+
+(library
+  (name oS_common)
+  (public_name mirage-xen)
+  (implements mirage-os-shim)
+  (libraries mirage-xen.internals)
+  (modules mirage_OS)
+ )

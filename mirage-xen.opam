@@ -26,6 +26,7 @@ depends: [
   "mirage-xen-ocaml" {>= "2.6.0"}
   "io-page-xen" {>= "2.0.0"}
   "mirage-xen-minios" {>= "0.7.0"}
+  "mirage-os-shim"
   "logs"
   "fmt"
 ]
