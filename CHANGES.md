@@ -1,3 +1,10 @@
+## v4.0.0 (2019-06-25)
+
+* Breaking change: move from the `OS.Xen` module to `Os_xen`, in
+  order to let packages specifically depend on a particular bit
+  of Xen functionality. To port code, just change the module reference
+  to `Os_xen` instead of `OS`. (#16 @TheLortex @avsm)
+
 ## v3.4.0 (2018-04-22)
 
 * Drop support for old ocaml-gnt package (#12, by @talex5)

@@ -1,5 +1,5 @@
 (library
- (name Os_xen)
+ (name os_xen)
  (public_name mirage-xen.internals)
  (wrapped true)
  (modules :standard \ OS)
