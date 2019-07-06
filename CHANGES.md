@@ -1,3 +1,7 @@
+## v4.0.1 (2019-07-05)
+* Fix mirage-xen pkg-config file to reflect correct location of
+  the bindings (@avsm)
+
 ## v4.0.0 (2019-06-25)
 
 * Breaking change: move from the `OS.Xen` module to `Os_xen`, in
