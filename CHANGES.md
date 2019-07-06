@@ -1,4 +1,5 @@
 ## v4.0.1 (2019-07-05)
+
 * Fix mirage-xen pkg-config file to reflect correct location of
   the bindings (@avsm)
 
