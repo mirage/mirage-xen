@@ -10,7 +10,7 @@
   of Xen functionality. To port code, just change the module reference
   to `Os_xen` instead of `OS`. (#16 @TheLortex @avsm)
 
-## v3.4.0 (2018-04-22)
+## v3.4.0 (2019-04-22)
 
 * Drop support for old ocaml-gnt package (#12, by @talex5)
 * require dune, and conflict with broken version 1.9.1 (#13, by @hannesm)
