@@ -21,32 +21,14 @@
  * 02111-1307, USA.
  *)
 
-open Lwt
-
 external block_domain : [`Time] Time.Monotonic.t -> unit = "caml_block_domain"
 
 let evtchn = Eventchn.init ()
-
-let enter_hooks = Lwt_dllist.create ()
-
-let rec call_hooks hooks  =
-  match Lwt_dllist.take_opt_l hooks with
-    | None ->
-        return ()
-    | Some f ->
-        (* Run the hooks in parallel *)
-        let _ =
-          Lwt.catch f
-          (fun exn ->
-            Printf.printf "call_hooks: exn %s\n%!" (Printexc.to_string exn);
-            return ()) in
-        call_hooks hooks
 
 external look_for_work: unit -> bool = "stub_evtchn_look_for_work"
 
 (* Execute one iteration and register a callback function *)
 let run t =
-  let t = call_hooks enter_hooks <&> t in
   let rec aux () =
     Lwt.wakeup_paused ();
     Time.restart_threads Time.Monotonic.time;
@@ -80,8 +62,3 @@ let () =
   at_exit (fun () ->
     Lwt.abandon_wakeups () ;
     run (Mirage_runtime.run_exit_hooks ()))
-
-let at_enter f = ignore (Lwt_dllist.add_l f enter_hooks)
-let at_enter_iter f = Mirage_runtime.at_enter_iter f
-let at_exit_iter f = Mirage_runtime.at_leave_iter f
-let at_exit f = Mirage_runtime.at_exit f
