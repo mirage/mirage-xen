@@ -33,8 +33,13 @@ end
 module Main : sig
 val run : unit Lwt.t -> unit
 val at_enter : (unit -> unit Lwt.t) -> unit
+[@deprecate "This functionality will be removed in MirageOS 4.0. If you need at_enter, please consult the mirageos-devel@lists.xenproject.org mailing list."]
 val at_enter_iter : (unit -> unit) -> unit
+[@deprecate "Use Mirage_runtime.at_enter_iter instead"]
 val at_exit_iter  : (unit -> unit) -> unit
+[@deprecate "Use Mirage_runtime.at_exit_iter instead"]
+val at_exit : (unit -> unit Lwt.t) -> unit
+[@deprecate "Use Mirage_runtime.at_exit instead"]
 end
 
 module MM : sig

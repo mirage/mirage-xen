@@ -27,10 +27,7 @@ external block_domain : [`Time] Time.Monotonic.t -> unit = "caml_block_domain"
 
 let evtchn = Eventchn.init ()
 
-let exit_hooks = Lwt_dllist.create ()
 let enter_hooks = Lwt_dllist.create ()
-let exit_iter_hooks = Lwt_dllist.create ()
-let enter_iter_hooks = Lwt_dllist.create ()
 
 let rec call_hooks hooks  =
   match Lwt_dllist.take_opt_l hooks with
@@ -65,10 +62,10 @@ let run t =
           (* Some event channels have triggered, wake up threads
            * and continue without blocking. *)
           (* Call enter hooks. *)
-          Lwt_dllist.iter_l (fun f -> f ()) enter_iter_hooks;
+          Mirage_runtime.run_enter_iter_hooks () ;
           Activations.run evtchn;
           (* Call leave hooks. *)
-          Lwt_dllist.iter_l (fun f -> f ()) exit_iter_hooks;
+          Mirage_runtime.run_leave_iter_hooks () ;
           aux ()
         end else begin
           let timeout =
@@ -83,8 +80,12 @@ let run t =
         end in
   aux ()
 
-let () = at_exit (fun () -> run (call_hooks exit_hooks))
-let _at_exit f = ignore (Lwt_dllist.add_l f exit_hooks)
+let () =
+  at_exit (fun () ->
+    Lwt.abandon_wakeups () ;
+    run (Mirage_runtime.run_exit_hooks ()))
+
 let at_enter f = ignore (Lwt_dllist.add_l f enter_hooks)
-let at_exit_iter f = ignore (Lwt_dllist.add_l f exit_iter_hooks)
-let at_enter_iter f = ignore (Lwt_dllist.add_l f enter_iter_hooks)
+let at_enter_iter f = Mirage_runtime.at_enter_iter f
+let at_exit_iter f = Mirage_runtime.at_leave_iter f
+let at_exit f = Mirage_runtime.at_exit f
