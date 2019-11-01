@@ -1,3 +1,9 @@
+## v5.0.0 (2019-11-01)
+
+* Revert the 4.0.0 change, Os_xen is now OS.Xen again (#20 @dinosaure)
+* Adapt to mirage-runtime hooks (see mirage/mirage#1010) for at_enter_iter / at_exit_iter / at_exit (#21 @hannesm)
+* Bump lower OCaml version to 4.06.0 (#21 @hannesm)
+
 ## v4.0.1 (2019-07-05)
 
 * Fix mirage-xen pkg-config file to reflect correct location of
