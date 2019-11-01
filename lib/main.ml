@@ -21,43 +21,18 @@
  * 02111-1307, USA.
  *)
 
-open Lwt
-
 external block_domain : [`Time] Time.Monotonic.t -> unit = "caml_block_domain"
 
 let evtchn = Eventchn.init ()
 
-let exit_hooks = Lwt_dllist.create ()
-let enter_hooks = Lwt_dllist.create ()
-let exit_iter_hooks = Lwt_dllist.create ()
-let enter_iter_hooks = Lwt_dllist.create ()
-
-let rec call_hooks hooks  =
-  match Lwt_dllist.take_opt_l hooks with
-    | None ->
-        return ()
-    | Some f ->
-        (* Run the hooks in parallel *)
-        let _ =
-          Lwt.catch f
-          (fun exn ->
-            Printf.printf "call_hooks: exn %s\n%!" (Printexc.to_string exn);
-            return ()) in
-        call_hooks hooks
-
 external look_for_work: unit -> bool = "stub_evtchn_look_for_work"
-
-let err exn =
-  Logs.err (fun m -> m "main: %s\n%s" (Printexc.to_string exn) (Printexc.get_backtrace ())) ;
-  exit 1
 
 (* Execute one iteration and register a callback function *)
 let run t =
-  let t = call_hooks enter_hooks <&> t in
   let rec aux () =
     Lwt.wakeup_paused ();
     Time.restart_threads Time.Monotonic.time;
-    match (try Lwt.poll t with exn -> err exn) with
+    match Lwt.poll t with
     | Some () ->
         ()
     | None ->
@@ -65,10 +40,10 @@ let run t =
           (* Some event channels have triggered, wake up threads
            * and continue without blocking. *)
           (* Call enter hooks. *)
-          Lwt_dllist.iter_l (fun f -> f ()) enter_iter_hooks;
+          Mirage_runtime.run_enter_iter_hooks () ;
           Activations.run evtchn;
           (* Call leave hooks. *)
-          Lwt_dllist.iter_l (fun f -> f ()) exit_iter_hooks;
+          Mirage_runtime.run_leave_iter_hooks () ;
           aux ()
         end else begin
           let timeout =
@@ -83,8 +58,7 @@ let run t =
         end in
   aux ()
 
-let () = at_exit (fun () -> run (call_hooks exit_hooks))
-let _at_exit f = ignore (Lwt_dllist.add_l f exit_hooks)
-let at_enter f = ignore (Lwt_dllist.add_l f enter_hooks)
-let at_exit_iter f = ignore (Lwt_dllist.add_l f exit_iter_hooks)
-let at_enter_iter f = ignore (Lwt_dllist.add_l f enter_iter_hooks)
+let () =
+  at_exit (fun () ->
+    Lwt.abandon_wakeups () ;
+    run (Mirage_runtime.run_exit_hooks ()))

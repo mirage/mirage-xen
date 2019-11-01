@@ -32,9 +32,6 @@ end
 
 module Main : sig
 val run : unit Lwt.t -> unit
-val at_enter : (unit -> unit Lwt.t) -> unit
-val at_enter_iter : (unit -> unit) -> unit
-val at_exit_iter  : (unit -> unit) -> unit
 end
 
 module MM : sig
@@ -44,8 +41,6 @@ module Heap_pages : sig
 end
 end
 module Time : sig
-
-type +'a io = 'a Lwt.t
 
 (** Timeout operations. *)
 
