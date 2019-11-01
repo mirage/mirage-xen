@@ -6,10 +6,7 @@ script: bash -ex .travis-opam.sh
 env:
     global:
         - PACKAGE="mirage-xen"
-        - REVDEPS=*
-        - PINS="mirage-runtime:https://github.com/mirage/mirage.git"
     matrix:
+        - OCAML_VERSION=4.08
         - OCAML_VERSION=4.07
         - OCAML_VERSION=4.06
-        - OCAML_VERSION=4.05
-        - OCAML_VERSION=4.04
