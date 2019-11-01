@@ -50,8 +50,6 @@ end
 end
 module Time : sig
 
-type +'a io = 'a Lwt.t
-
 (** Timeout operations. *)
 
 module Monotonic : sig
