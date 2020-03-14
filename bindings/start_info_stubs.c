@@ -25,57 +25,60 @@
 
 #include <xen/xen.h>
 #include <mini-os/os.h>
+#include <xen/hvm/params.h>
+#include <mini-os/kernel.h>
 
 CAMLprim value
-stub_start_info_get(value unit)
+caml_cmdline(value v_unit)
 {
-  CAMLparam1(unit);
-  CAMLlocal2(result, tmp);
-  char buf[MAX_GUEST_CMDLINE+1];
-
-  result = caml_alloc_tuple(16);
-  memcpy(buf, start_info.magic, sizeof(start_info.magic));
-  buf[sizeof(start_info.magic)] = 0;
-  tmp = caml_copy_string(buf);
-  Store_field(result, 0, tmp);
-  Store_field(result, 1, Val_int(start_info.nr_pages));
-  Store_field(result, 2, Val_int(start_info.shared_info));
-  Store_field(result, 3, Val_int(start_info.flags));
-  Store_field(result, 4, Val_int(start_info.store_mfn));
-  Store_field(result, 5, Val_int(start_info.store_evtchn));
-  Store_field(result, 6, Val_int(start_info.console.domU.mfn));
-  Store_field(result, 7, Val_int(start_info.console.domU.evtchn));
-  Store_field(result, 8, Val_int(start_info.pt_base));
-  Store_field(result, 9, Val_int(start_info.nr_pt_frames));
-  Store_field(result, 10, Val_int(start_info.mfn_list));
-  Store_field(result, 11, Val_int(start_info.mod_start));
-  Store_field(result, 12, Val_int(start_info.mod_len));
-  memcpy(buf, start_info.cmd_line, MAX_GUEST_CMDLINE);
-  buf[MAX_GUEST_CMDLINE] = 0;
-  tmp = caml_copy_string(buf);
-  Store_field(result, 13, tmp);
-  Store_field(result, 14, Val_int(start_info.first_p2m_pfn));
-  Store_field(result, 15, Val_int(start_info.nr_p2m_frames));
-
-  CAMLreturn(result);
+  CAMLparam1(v_unit);
+  CAMLreturn(caml_copy_string(cmdline));
 }
 
 CAMLprim value
 caml_console_start_page(value v_unit)
 {
   CAMLparam1(v_unit);
+  uint64_t console;
+  if (hvm_get_parameter(HVM_PARAM_CONSOLE_PFN, &console))
+    caml_failwith("couldn't get console pfn");
   CAMLreturn(caml_ba_alloc_dims(CAML_BA_UINT8 | CAML_BA_C_LAYOUT,
-                                1,
-                                mfn_to_virt(start_info.console.domU.mfn),
-                                (long)PAGE_SIZE));
+				1,
+				(void *)pfn_to_virt(console),
+				(long)PAGE_SIZE));
+}
+
+CAMLprim value
+caml_console_event_channel(value v_unit)
+{
+  CAMLparam1(v_unit);
+  uint64_t evtchn;
+  if (hvm_get_parameter(HVM_PARAM_CONSOLE_EVTCHN, &evtchn))
+    caml_failwith("couldn't get console event channel");
+  CAMLreturn (Val_int(evtchn));
 }
 
 CAMLprim value
 caml_xenstore_start_page(value v_unit)
 {
   CAMLparam1(v_unit);
+  uint64_t store;
+  if (hvm_get_parameter(HVM_PARAM_STORE_PFN, &store))
+    caml_failwith("couldn't get xenstore pfn");
+  /* FIXME: map this store page somewhere */
   CAMLreturn(caml_ba_alloc_dims(CAML_BA_UINT8 | CAML_BA_C_LAYOUT,
-                                1,
-                                mfn_to_virt(start_info.store_mfn),
-                                (long)PAGE_SIZE));
+				1,
+				(void *)pfn_to_virt(store),
+				(long)PAGE_SIZE));
+  CAMLreturn(v_unit);
+}
+
+CAMLprim value
+caml_xenstore_event_channel(value v_unit)
+{
+  CAMLparam1(v_unit);
+  uint64_t evtchn;
+  if (hvm_get_parameter(HVM_PARAM_STORE_EVTCHN, &evtchn))
+    caml_failwith("couldn't get xenstore event channel");
+  CAMLreturn (Val_int(evtchn));
 }
