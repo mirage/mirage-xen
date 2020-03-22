@@ -39,12 +39,10 @@ CAMLprim value
 caml_console_start_page(value v_unit)
 {
   CAMLparam1(v_unit);
-  uint64_t console;
-  if (hvm_get_parameter(HVM_PARAM_CONSOLE_PFN, &console))
-    caml_failwith("couldn't get console pfn");
+  extern char console_ring_page[];
   CAMLreturn(caml_ba_alloc_dims(CAML_BA_UINT8 | CAML_BA_C_LAYOUT,
 				1,
-				(void *)pfn_to_virt(console),
+				console_ring_page,
 				(long)PAGE_SIZE));
 }
 
