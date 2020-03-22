@@ -70,7 +70,6 @@ caml_xenstore_start_page(value v_unit)
 				1,
 				(void *)pfn_to_virt(store),
 				(long)PAGE_SIZE));
-  CAMLreturn(v_unit);
 }
 
 CAMLprim value
