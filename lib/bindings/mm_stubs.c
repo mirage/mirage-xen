@@ -1,5 +1,5 @@
-(*
- * Copyright (c) Citrix Systems Inc
+/*
+ * Copyright (c) 2015 Thomas Leonard <talex5@gmail.com>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -12,37 +12,37 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *)
-open Lwt.Infix
+ */
 
-type reason =
-  | Poweroff
-  | Reboot
-  | Suspend
-  | Crash
+#include <stdint.h>
 
-external shutdown: reason -> unit = "stub_sched_shutdown"
+#include "bindings.h"
 
-external _suspend: unit -> int = "stub_hypervisor_suspend"
+#define CAML_NAME_SPACE
+#include <caml/mlvalues.h>
+#include <caml/alloc.h>
+#include <caml/memory.h>
 
-let resume_hooks : (unit -> unit Lwt.t) list ref = ref []
+CAMLprim value
+stub_heap_get_pages_total(value unit) // noalloc
+{
+    return Val_long(0);
+}
 
-let add_resume_hook hook =
-  resume_hooks := hook :: !resume_hooks
+CAMLprim value
+stub_heap_get_pages_used(value unit) // noalloc
+{
+    return Val_long(0);
+}
 
-let suspend () =
-  Xs.make ()
-  >>= fun xs_client ->
-  Xs.suspend xs_client
-  >>= fun () ->
-
-  let result = _suspend () in
-
-  Generation.resume ();
-  Activations.resume ();
-  Xs.resume xs_client
-  >>= fun () ->
-  Lwt_list.iter_p (fun f -> f ()) !resume_hooks
-  >>= fun () ->
-  Lwt.return result
-  
+/* expose the virt_to_mfn macro for converting a "virtual address number"
+ * (AKA "a pointer") to a machine frame number
+*/
+CAMLprim value
+stub_virt_to_mfn(value page)
+{
+    CAMLparam1(page);
+    CAMLlocal1(result);
+    result = caml_copy_nativeint(Nativeint_val(page) >> PAGE_SHIFT);
+    CAMLreturn(result);
+}

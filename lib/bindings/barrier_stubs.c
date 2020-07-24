@@ -14,29 +14,25 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <stdint.h>
-#include <assert.h>
+#include "bindings.h"
 
+#define CAML_NAME_SPACE
 #include <caml/mlvalues.h>
 #include <caml/alloc.h>
 #include <caml/memory.h>
 #include <caml/bigarray.h>
 
-#include <mini-os/os.h>
-#define xen_mb() mb()
-#define xen_wmb() wmb()
-
 CAMLprim value
 caml_memory_barrier()
 {
-  xen_mb();
+  cpu_barrier();
   return Val_unit;
 }
 
 CAMLprim value
 caml_write_memory_barrier()
 {
-  wmb();
+  cpu_write_barrier();
   return Val_unit;
 }
 
@@ -64,4 +60,3 @@ CAMLprim value caml_cstruct_unsafe_save_uint32(value vc, value vofs, value x) {
   data[ofs / sizeof(uint32_t)] = Int_val(x);
   CAMLreturn (Val_unit);
 }
-

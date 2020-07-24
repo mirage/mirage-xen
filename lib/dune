@@ -1,5 +1,24 @@
 (library
  (name oS)
  (public_name mirage-xen)
- (wrapped true)
- (libraries lwt cstruct xen-evtchn xenstore.client shared-memory-ring-lwt mirage-profile logs io-page-xen fmt mirage-xen.bindings mirage-runtime))
+ (libraries lwt cstruct xenstore.client shared-memory-ring-lwt
+            mirage-profile logs io-page fmt mirage-runtime)
+ (foreign_archives mirage-xen_bindings))
+
+(foreign_library
+ (archive_name mirage-xen_bindings)
+ (language c)
+ (include_dirs ../include)
+ (names main evtchn gnttab
+        alloc_pages_stubs atomic_stubs barrier_stubs checksum_stubs clock_stubs
+        cstruct_stubs mm_stubs)
+ (flags (:include cflags.sexp) -O2 -std=c99 -Wall -Werror
+        -D__XEN_INTERFACE_VERSION__=__XEN_LATEST_INTERFACE_VERSION__))
+
+(include_subdirs unqualified)
+
+(rule (with-stdout-to cflags.sexp (run ./cflags.sh)))
+
+(install
+ (section lib)
+ (files (bindings/mirage-xen.pc as ../pkgconfig/mirage-xen.pc)))

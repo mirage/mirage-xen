@@ -1,5 +1,4 @@
-/*
- * Copyright (c) 2015 Thomas Leonard <talex5@gmail.com>
+(* Copyright (C) Citrix Inc
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -12,33 +11,20 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- */
+*)
 
-#include <caml/mlvalues.h>
-#include <caml/alloc.h>
-#include <caml/memory.h>
-#include <mini-os/mm.h>
+exception Invalid
 
-CAMLprim value
-stub_heap_get_pages_total(value unit) // noalloc
-{
-  return Val_long(minios_heap_pages_total);
+type 'a t = {
+  generation : int;
+  value : 'a
 }
 
-CAMLprim value
-stub_heap_get_pages_used(value unit) // noalloc
-{
-  return Val_long(minios_heap_pages_used);
-}
+let generation = ref 0
 
-/* expose the virt_to_mfn macro for converting a "virtual address number"
- * (AKA "a pointer") to a machine frame number
-*/
-CAMLprim value
-stub_virt_to_mfn(value page)
-{
-  CAMLparam1(page);
-  CAMLlocal1(result);
-  result = caml_copy_nativeint(virt_to_mfn(Nativeint_val(page)));
-  CAMLreturn(result);
-}
+let wrap x = { generation = !generation; value = x }
+let maybe t f d = if t.generation <> !generation then d else (f t.value)
+let extract t = t.value
+let resume () = incr generation
+
+

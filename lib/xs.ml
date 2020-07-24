@@ -15,6 +15,20 @@
 
 open Lwt
 
+type page = (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout)
+    Bigarray.Array1.t
+
+external mirage_xen_get_xenstore_evtchn: unit -> int =
+    "mirage_xen_get_xenstore_evtchn"
+external mirage_xen_get_xenstore_page: unit -> page =
+    "mirage_xen_get_xenstore_page"
+
+let get_xenstore_evtchn () = Eventchn.of_int @@
+    mirage_xen_get_xenstore_evtchn ()
+
+let get_xenstore_page () = Cstruct.of_bigarray @@
+    mirage_xen_get_xenstore_page ()
+
 (* Mirage transport for XenStore. *)
 module IO = struct
     type 'a t = 'a Lwt.t
@@ -34,12 +48,12 @@ module IO = struct
     let singleton_client = ref None
 
     let create () =
-      match !singleton_client with 
-      | Some x -> Lwt.return x 
-      | None -> 
-        let page = Start_info.(xenstore_start_page ()) in
+      match !singleton_client with
+      | Some x -> Lwt.return x
+      | None ->
+        let page = get_xenstore_page () in
         Xenstore_ring.Ring.init page;
-        let evtchn = Eventchn.of_int Start_info.((get ()).store_evtchn) in
+        let evtchn = get_xenstore_evtchn () in
         Eventchn.unmask h evtchn;
         let c = { page; evtchn } in
         singleton_client := Some c;
@@ -47,10 +61,10 @@ module IO = struct
 
     let refresh () =
       match !singleton_client with
-      | Some x -> 
-        x.page <- Start_info.(xenstore_start_page ());
+      | Some x ->
+        x.page <- get_xenstore_page ();
         Xenstore_ring.Ring.init x.page;
-        x.evtchn <- Eventchn.of_int Start_info.((get ()).store_evtchn);
+        x.evtchn <- get_xenstore_evtchn ();
         Eventchn.unmask h x.evtchn
       | None -> ()
 
@@ -92,4 +106,3 @@ include Xs_client_lwt.Client(IO)
 let resume client =
   IO.refresh();
   resume client
-
