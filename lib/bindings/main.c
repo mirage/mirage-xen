@@ -19,6 +19,8 @@
 #include "hypercall.h"
 #include "xen/hvm/params.h"
 
+#include <stdlib.h>
+
 #define CAML_NAME_SPACE
 #include <caml/mlvalues.h>
 #include <caml/memory.h>
@@ -29,6 +31,7 @@
 
 static char *unused_argv[] = { "mirage", NULL };
 static const char *solo5_cmdline = "";
+static size_t solo5_heap_size;
 
 CAMLprim value
 mirage_xen_get_cmdline(value v_unit)
@@ -104,11 +107,28 @@ mirage_xen_get_xenstore_page(value v_unit)
                     (void *)(raw_pfn << PAGE_SHIFT), PAGE_SIZE));
 }
 
+/* @@noalloc */
+CAMLprim value
+mirage_xen_heap_get_pages_total(value v_unit)
+{
+    return Val_long(solo5_heap_size / PAGE_SIZE);
+}
+
+extern size_t malloc_footprint(void);
+
+/* @@noalloc */
+CAMLprim value
+mirage_xen_heap_get_pages_used(value v_unit)
+{
+    return Val_long(malloc_footprint() / PAGE_SIZE);
+}
+
 extern void _nolibc_init(uintptr_t, size_t);
 
 int solo5_app_main(const struct solo5_start_info *si)
 {
     solo5_cmdline = si->cmdline;
+    solo5_heap_size = si->heap_size;
     _nolibc_init(si->heap_start, si->heap_size);
     gnttab_init();
     caml_startup(unused_argv);

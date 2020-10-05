@@ -23,18 +23,6 @@
 #include <caml/alloc.h>
 #include <caml/memory.h>
 
-CAMLprim value
-stub_heap_get_pages_total(value unit) // noalloc
-{
-    return Val_long(0);
-}
-
-CAMLprim value
-stub_heap_get_pages_used(value unit) // noalloc
-{
-    return Val_long(0);
-}
-
 /* expose the virt_to_mfn macro for converting a "virtual address number"
  * (AKA "a pointer") to a machine frame number
 */
