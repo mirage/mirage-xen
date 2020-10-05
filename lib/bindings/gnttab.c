@@ -52,6 +52,15 @@ static const size_t NR_GRANT_TABLE_ENTRIES =
 
 static grant_entry_v1_t *gnttab_table;
 
+/*
+ * Grant pages imported from other Xen domains must use a separate virtual
+ * memory address space. Solo5 maps us an extra 1GB address space at physical
+ * address 4GB (see bindings/xen/platform.c), of which we use a suitably sized
+ * area for this purpose.
+ */
+#define NR_GNTMAP_AREA_PAGES (2 * NR_GRANT_TABLE_ENTRIES)
+static bmap_allocator_t *gnttab_alloc;
+
 void gnttab_init(void)
 {
     int rc = posix_memalign((void **)&gnttab_table, PAGE_SIZE,
@@ -65,6 +74,15 @@ void gnttab_init(void)
     }
     DPRINTF(1, "pages = %zd, entries = %zd\n", NR_GRANT_TABLE_PAGES,
             NR_GRANT_TABLE_ENTRIES);
+
+    uint64_t gntmap_area_addr;
+    size_t gntmap_area_size;
+    solo5__xen_get_gntmap_area(&gntmap_area_addr, &gntmap_area_size);
+    assert(NR_GNTMAP_AREA_PAGES <= (gntmap_area_size / PAGE_SIZE));
+    gnttab_alloc = bmap_init(gntmap_area_addr, NR_GNTMAP_AREA_PAGES);
+    assert(gnttab_alloc);
+    DPRINTF(1, "gntmap area: %zd pages @ 0x%lx\n", NR_GNTMAP_AREA_PAGES,
+            gntmap_area_addr);
 }
 
 /*
@@ -225,8 +243,8 @@ mirage_xen_gnttab_map(value v_unused_ctx, value v_ref, value v_domid,
     void *addr;
     int rc;
 
-    rc = posix_memalign(&addr, PAGE_SIZE, 1 * PAGE_SIZE);
-    if (rc != 0)
+    addr = bmap_alloc(gnttab_alloc, 1);
+    if (addr == NULL)
         caml_raise_out_of_memory();
 
     v_mapping = alloc_mapping(1);
@@ -238,7 +256,7 @@ mirage_xen_gnttab_map(value v_unused_ctx, value v_ref, value v_domid,
     mapping->entries[0].handle = ref;
     rc = gnttab_map(mapping);
     if (rc != 0) {
-        free(mapping->start_addr);
+        bmap_free(gnttab_alloc, mapping->start_addr, mapping->count);
         mapping->start_addr = NULL;
         mapping->count = 0;
         caml_failwith("mirage_xen_gnttab_map: failed");
@@ -270,8 +288,8 @@ mirage_xen_gnttab_mapv(value v_unused_ctx, value v_array, value v_writable)
     void *addr;
     int rc;
 
-    rc = posix_memalign(&addr, PAGE_SIZE, count * PAGE_SIZE);
-    if (rc != 0)
+    addr = bmap_alloc(gnttab_alloc, count);
+    if (addr == NULL)
         caml_raise_out_of_memory();
 
     v_mapping = alloc_mapping(count);
@@ -287,7 +305,7 @@ mirage_xen_gnttab_mapv(value v_unused_ctx, value v_array, value v_writable)
     }
     rc = gnttab_map(mapping);
     if (rc != 0) {
-        free(mapping->start_addr);
+        bmap_free(gnttab_alloc, mapping->start_addr, count);
         mapping->start_addr = NULL;
         mapping->count = 0;
         caml_failwith("mirage_xen_gnttab_mapv: failed");
@@ -317,7 +335,7 @@ mirage_xen_gnttab_unmap(value v_unused_ctx, value v_mapping)
     rc = gnttab_unmap(mapping);
     if (rc != 0)
         caml_failwith("mirage_xen_gnttab_unmap: failed");
-    free(mapping->start_addr);
+    bmap_free(gnttab_alloc, mapping->start_addr, mapping->count);
     mapping->start_addr = 0;
     mapping->count = 0;
     CAMLreturn(Val_unit);

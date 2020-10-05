@@ -2,6 +2,7 @@
 #define __XEN_BINDINGS_H__
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include "xen/xen.h"
 
@@ -117,5 +118,21 @@ static inline uint16_t atomic_sync_cmpxchgw(volatile uint16_t *ptr,
 #else /* __x86_64__ */
 #error Not implemented
 #endif /* __x86_64__ */
+
+/*
+ * Accessor for retrieving guest-virtual memory range suitable for importing
+ * grant mappings from Solo5.
+ */
+void solo5__xen_get_gntmap_area(uint64_t *addr, size_t *size);
+
+/*
+ * Bitmap allocator for virtual memory used for importing grant mappings.
+ */
+struct bmap_allocator;
+typedef struct bmap_allocator bmap_allocator_t;
+
+bmap_allocator_t *bmap_init(uint64_t start_addr, size_t n_pages);
+void *bmap_alloc(bmap_allocator_t *alloc, size_t n);
+void bmap_free(bmap_allocator_t *alloc, void *addr, size_t n);
 
 #endif /* __XEN_BINDINGS_H__ */

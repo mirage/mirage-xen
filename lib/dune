@@ -9,7 +9,7 @@
  (archive_name mirage-xen_bindings)
  (language c)
  (include_dirs ../include)
- (names main evtchn gnttab
+ (names main bmap evtchn gnttab
         alloc_pages_stubs atomic_stubs barrier_stubs checksum_stubs clock_stubs
         cstruct_stubs mm_stubs)
  (flags (:include cflags.sexp) -O2 -std=c99 -Wall -Werror
