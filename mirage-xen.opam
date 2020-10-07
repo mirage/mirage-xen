@@ -27,7 +27,7 @@ depends: [
   "logs"
   "fmt"
   "ocaml-freestanding" {>= "0.6.2"}
-  "solo5-bindings-xen"
+  "solo5-bindings-xen" {>= "0.6.7"}
 ]
 conflicts: [
   "dune" {= "1.9.1"}
