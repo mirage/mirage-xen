@@ -46,9 +46,9 @@
  * original MiniOS-based gnttab implementation used, so we stick with that for
  * now.
  */
-static const size_t NR_GRANT_TABLE_PAGES = 4;
-static const size_t NR_GRANT_TABLE_ENTRIES =
-    (NR_GRANT_TABLE_PAGES * PAGE_SIZE / sizeof (grant_entry_v1_t));
+#define NR_GRANT_TABLE_PAGES 4
+#define NR_GRANT_TABLE_ENTRIES \
+    (NR_GRANT_TABLE_PAGES * PAGE_SIZE / sizeof (grant_entry_v1_t))
 
 static grant_entry_v1_t *gnttab_table;
 
