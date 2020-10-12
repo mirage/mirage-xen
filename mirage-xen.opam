@@ -36,7 +36,10 @@ conflicts: [
   "mirage-xen-posix"
   "minios-xen"
 ]
-available: [ os = "linux" ]
+available: [
+  (arch = "x86_64" ) &
+  (os = "linux" | os = "freebsd" | os = "openbsd")
+]
 synopsis: "Xen core platform libraries for MirageOS"
 description: """
 This package provides the MirageOS `OS` library for
