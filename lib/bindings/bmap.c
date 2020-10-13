@@ -36,7 +36,6 @@ struct bmap_allocator {
     size_t bmap_size;                    /* # of words in bmap[] */
     uint64_t start_addr;                 /* starting virtual memory address */
 };
-typedef struct bmap_allocator bmap_allocator_t;
 
 #define BPW (sizeof(long) * 8)
 _Static_assert(sizeof(long) == 8, "long must be 64 bits");
@@ -185,7 +184,7 @@ void bmap_free(bmap_allocator_t *alloc, void *addr, size_t n)
      * Verify that:
      *    addr is page-aligned
      *    addr is within the range given to alloc
-     *    n is at least 1; the maxiumum size of n is checked in clearn_at().
+     *    n is at least 1; the maximum size of n is checked in setn_at().
      */
     assert(((uintptr_t)addr & (PAGE_SIZE - 1)) == 0);
     assert((uintptr_t)addr >= alloc->start_addr);
