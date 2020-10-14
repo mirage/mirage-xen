@@ -2,23 +2,20 @@
  (name oS)
  (public_name mirage-xen)
  (libraries lwt cstruct xenstore.client shared-memory-ring-lwt
-            mirage-profile logs io-page fmt mirage-runtime)
- (foreign_archives mirage-xen_bindings))
+            mirage-profile logs io-page fmt mirage-runtime))
 
-(foreign_library
- (archive_name mirage-xen_bindings)
- (language c)
- (include_dirs ../include)
- (names main bmap evtchn gnttab
-        alloc_pages_stubs atomic_stubs barrier_stubs checksum_stubs clock_stubs
-        cstruct_stubs mm_stubs)
- (flags (:include cflags.sexp) -O2 -std=c99 -Wall -Werror
-        -D__XEN_INTERFACE_VERSION__=__XEN_LATEST_INTERFACE_VERSION__))
+(rule
+ (deps (source_tree bindings))
+ (targets libmirage-xen_bindings.a)
+ (action
+ (no-infer
+  (progn
+   (chdir bindings (run %{make}))
+   (copy bindings/libmirage-xen_bindings.a libmirage-xen_bindings.a)))))
 
 (include_subdirs unqualified)
 
-(rule (with-stdout-to cflags.sexp (run ./cflags.sh)))
-
 (install
  (section lib)
- (files (bindings/mirage-xen.pc as ../pkgconfig/mirage-xen.pc)))
+ (files (bindings/mirage-xen.pc as ../pkgconfig/mirage-xen.pc)
+   (libmirage-xen_bindings.a as libmirage-xen_bindings.a)))
