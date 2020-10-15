@@ -42,7 +42,7 @@ type domid = int
 let console = 0 (* public/grant_table.h:GNTTAB_RESERVED_CONSOLE *)
 let xenstore = 1 (* public/grant_table.h:GNTTAB_RESERVED_XENSTORE *)
 
-let ten_seconds_in_ns = 10000000000L
+let ten_seconds_in_ns = Duration.of_sec 10
 
 type grant_handle (* handle to a mapped grant *)
 

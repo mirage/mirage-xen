@@ -2,7 +2,7 @@
  (name oS)
  (public_name mirage-xen)
  (libraries lwt cstruct xenstore.client shared-memory-ring-lwt
-            mirage-profile logs io-page fmt mirage-runtime))
+            mirage-profile logs io-page fmt mirage-runtime bheap duration))
 
 (rule
  (deps (source_tree bindings))
