@@ -15,13 +15,12 @@
  *)
 open Lwt.Infix
 
-[@@@warning "-3"]
-external evtchn_init: unit -> unit = "stub_evtchn_init"
-external evtchn_nr_events: unit -> int = "stub_nr_events"
-external evtchn_test_and_clear: int -> bool = "stub_evtchn_test_and_clear" "noalloc"
+external evtchn_get_nr_events: unit -> int =
+    "mirage_xen_evtchn_get_nr_events" [@@noalloc]
+external evtchn_test_and_clear: int -> bool =
+    "mirage_xen_evtchn_test_and_clear" [@@noalloc]
 
-let _ = evtchn_init ()
-let nr_events = evtchn_nr_events ()
+let nr_events = evtchn_get_nr_events ()
 let event_cb = Array.init nr_events (fun _ -> Lwt_dllist.create ())
 
 (* The high-level interface creates one counter per event channel port.

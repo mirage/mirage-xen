@@ -21,11 +21,12 @@
  * 02111-1307, USA.
  *)
 
-external block_domain : [`Time] Time.Monotonic.t -> unit = "caml_block_domain"
+external evtchn_block_domain : [`Time] Time.Monotonic.t -> unit =
+    "mirage_xen_evtchn_block_domain" [@@noalloc]
+external evtchn_demux_pending: unit -> bool =
+    "mirage_xen_evtchn_demux_pending" [@@noalloc]
 
 let evtchn = Eventchn.init ()
-
-external look_for_work: unit -> bool = "stub_evtchn_look_for_work"
 
 (* Execute one iteration and register a callback function *)
 let run t =
@@ -36,7 +37,7 @@ let run t =
     | Some () ->
         ()
     | None ->
-        if look_for_work () then begin
+        if evtchn_demux_pending () then begin
           (* Some event channels have triggered, wake up threads
            * and continue without blocking. *)
           (* Call enter hooks. *)
@@ -52,7 +53,7 @@ let run t =
             |Some tm -> tm
           in
           MProf.Trace.(note_hiatus Wait_for_work);
-          block_domain timeout;
+          evtchn_block_domain timeout;
           MProf.Trace.note_resume ();
           aux ()
         end in

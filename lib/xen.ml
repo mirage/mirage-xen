@@ -65,7 +65,7 @@ module Import = struct
 
     let to_buf t = t.pages
 
-    external unmap_exn : unit -> grant_handle -> unit = "stub_gnttab_unmap"
+    external unmap_exn : unit -> grant_handle -> unit = "mirage_xen_gnttab_unmap"
     let unmap_exn mapping = List.iter (unmap_exn ()) mapping.hs
 
     let unmap mapping =
@@ -73,16 +73,16 @@ module Import = struct
       with ex -> Error (`Msg (Printexc.to_string ex))
   end
 
-  external map_fresh_exn: unit -> Gntref.t -> domid -> bool -> (grant_handle * Io_page.t) = "stub_gnttab_map_fresh"
+  external map_exn: unit -> Gntref.t -> domid -> bool -> (grant_handle * Io_page.t) = "mirage_xen_gnttab_map"
 
   let map_exn grant ~writable =
-    let h, page = map_fresh_exn () grant.ref grant.domid writable in
+    let h, page = map_exn () grant.ref grant.domid writable in
     Local_mapping.make [h] page
 
   let map grant ~writable = try Ok (map_exn grant ~writable) with ex -> Error (`Msg (Printexc.to_string ex))
 
   (* We must use a special mapv function to ensure the memory is mapped contiguously. *)
-  external mapv_batched_exn: unit -> int array -> bool -> (grant_handle * Io_page.t) = "stub_gnttab_mapv_batched"
+  external mapv_exn: unit -> int array -> bool -> (grant_handle * Io_page.t) = "mirage_xen_gnttab_mapv"
 
   let mapv_exn grants ~writable =
     let count = List.length grants in
@@ -91,7 +91,7 @@ module Import = struct
         grant_array.(i * 2 + 0) <- g.domid;
         grant_array.(i * 2 + 1) <- g.ref;
       ) grants;
-    let h, page = mapv_batched_exn () grant_array writable in
+    let h, page = mapv_exn () grant_array writable in
     Local_mapping.make [h] page
 
   let mapv gs ~writable = try Ok (mapv_exn gs ~writable) with ex -> Error (`Msg (Printexc.to_string ex))
@@ -181,13 +181,13 @@ module Export = struct
       (fun () -> f gnts)
       (fun () -> Lwt.return (List.iter put gnts))
 
-  external nr_entries : unit -> int = "stub_gnttab_nr_entries"
+  external nr_entries : unit -> int = "mirage_xen_gnttab_get_nr_entries"
 
   (* Any page that another domain can access MUST be in this array.
      Otherwise, it could get GC'd and reused for something else. *)
   let exports : Io_page.t option array = Array.make (nr_entries ()) None
 
-  external grant_access : Gntref.t -> Io_page.t -> int -> bool -> unit = "stub_gntshr_grant_access"
+  external grant_access : Gntref.t -> Io_page.t -> int -> bool -> unit = "mirage_xen_gnttab_grant_access"
 
   let grant_access ~domid ~writable gntref page =
     MProf.Trace.label "Gntshr.grant_access";
@@ -201,7 +201,7 @@ module Export = struct
       raise ex
 
   (* true if access has been ended, false if page is still being used (access has not changed) *)
-  external try_end_access : Gntref.t -> bool = "stub_gntshr_try_end_access"
+  external try_end_access : Gntref.t -> bool = "mirage_xen_gnttab_end_access"
 
   let try_end_access ~release_ref g =
     MProf.Trace.label "Gntshr.end_access";
@@ -263,8 +263,8 @@ module Export = struct
     Lwt.finalize fn
       (fun () -> Lwt_list.iter_s (end_access ~release_ref:false) gnts)
 
-  external nr_entries : unit -> int = "stub_gnttab_nr_entries"
-  external nr_reserved : unit -> int = "stub_gnttab_reserved"
+  external nr_entries : unit -> int = "mirage_xen_gnttab_get_nr_entries"
+  external nr_reserved : unit -> int = "mirage_xen_gnttab_get_nr_reserved"
 
   let () =
     for i = nr_reserved () to nr_entries () - 1 do

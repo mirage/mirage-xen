@@ -88,7 +88,63 @@ val with_timeout : int64 -> (unit -> 'a Lwt.t) -> 'a Lwt.t
 end
 
 module Xs : sig
+  (** Xenstore client. *)
+
   include Xs_client_lwt.S
+end
+
+module Eventchn : sig
+  (** Low-level event channels interface. *)
+
+  type handle
+  (** An initialised event channel interface. *)
+
+  type t
+  (** A local event channel. *)
+
+  val to_int: t -> int
+  (** [to_int evtchn] is the port number of [evtchn]. *)
+
+  val of_int: int -> t
+  (** [of_int n] is the [n]th event channel. *)
+
+  val init: unit -> handle
+  (** Return an initialised event channel interface. On error it
+      will throw a Failure exception. *)
+
+  val close: handle -> int
+  (** Close an event channel interface and return the status code. *)
+
+  val notify : handle -> t -> unit
+  (** Notify the given event channel. On error it will throw a
+      Failure exception. *)
+
+  val bind_interdomain : handle -> int -> int -> t
+  (** [bind_interdomain h domid remote_port] returns a local event
+      channel connected to domid:remote_port. On error it will
+      throw a Failure exception. *)
+
+  val bind_unbound_port : handle -> int -> t
+  (** [bind_unbound_port h remote_domid] returns a new event channel
+      awaiting an interdomain connection from [remote_domid]. On error
+      it will throw a Failure exception. *)
+
+  val bind_dom_exc_virq : handle -> t
+  (** Binds a local event channel to the VIRQ_DOM_EXC
+      (domain exception VIRQ). On error it will throw a Failure
+      exception. *)
+
+  val unbind : handle -> t -> unit
+  (** Unbinds the given event channel. On error it will throw a
+      Failure exception. *)
+
+  val unmask : handle -> t -> unit
+  (** Unmasks the given event channel. On error it will throw a
+      Failure exception. *)
+
+  val is_valid : t -> bool
+  (** [is_valid c] is true if [t] is bound. Bindings are invalidated
+      after a domain resume. *)
 end
 
 module Activations : sig
@@ -145,69 +201,6 @@ module Device_state : sig
   val of_string : string -> state
   val to_string : state -> string
   val prettyprint : state -> string
-end
-
-module Sched : sig
-  (** Xen scheduler operations. *)
-
-  (** Type of the argument of function [shutdown]. *)
-  type reason =
-    | Poweroff
-    | Reboot
-    | Suspend
-    | Crash
-
-  val add_resume_hook : (unit -> unit Lwt.t) -> unit
-  (** [add_resume_hook f] adds [f] in the list of functions to be called
-      on resume. *)
-
-  val shutdown: reason -> unit
-  (** [shutdown reason] informs Xen that the unikernel has shutdown. The
-      [reason] argument indicates the type of shutdown (according to
-      this type and the configuration of the unikernel, Xen might
-      restart the unikernel or not). To suspend, do a [shutdown Suspend]
-      is not enough, use the function below instead. *)
-
-  val suspend: unit -> int Lwt.t
-  (** [suspend ()] suspends the unikernel and returns [0] after
-      the kernel has been resumed, in case of success, or
-      immediately returns a non-zero value in case of error. *)
-end
-
-module Start_info : sig
-  (** Get the start info page. *)
-
-  type t = {
-    magic: string; (** "xen-<version>-<platform>". *)
-    nr_pages: int; (** Total pages allocated to this domain. *)
-    shared_info: int; (** MACHINE address of shared info struct. *)
-    flags: int; (** SIF_xxx flags. *)
-    store_mfn: int; (** MACHINE page number of the shared page used for communication with the XenStore. *)
-    store_evtchn: int; (** Event channel for communication with the XenStore. *)
-    console_mfn: int; (** MACHINE page number of console page. *)
-    console_evtchn: int; (** Event channel for console page. *)
-
-    (* THE FOLLOWING ARE ONLY FILLED IN ON INITIAL BOOT (NOT RESUME). *)
-    pt_base: int; (** VIRTUAL address of page directory. *)
-    nr_pt_frames: int; (** Number of bootstrap p.t. frames. *)
-    mfn_list: int; (** VIRTUAL address of page-frame list. *)
-    mod_start: int; (** VIRTUAL address of pre-loaded module. *)
-    mod_len: int; (** Size (bytes) of pre-loaded module. *)
-    cmd_line: string; (** Command-line arguments passed to the unikernel. *)
-    first_p2m_pfn: int; (** 1st pfn forming initial P->M table. *)
-    nr_p2m_frames: int (** # of pfns forming initial P->M table. *)
-  }
-
-  val get: unit -> t
-  (** [get ()] is the record containing the start info page. *)
-
-  val console_start_page: unit -> Cstruct.t
-  (** [console_start_page ()] is the console page automatically
-      allocated by Xen. *)
-
-  val xenstore_start_page: unit -> Cstruct.t
-  (** [xenstore_start_page ()] is the xenstore page automatically
-      allocated by Xen. *)
 end
 
 module Xen : sig
