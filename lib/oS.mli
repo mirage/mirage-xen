@@ -35,11 +35,23 @@ val run : unit Lwt.t -> unit
 end
 
 module MM : sig
-module Heap_pages : sig
-  val total: unit -> int
-  val used: unit -> int
+
+(** Memory management operations. *)
+
+module Heap : sig
+  (** malloc() heap statistics. *)
+
+  val total_bytes: unit -> int64
+  (** [total_bytes] returns the total size of the heap, in bytes. *)
+
+  val allocated_bytes: unit -> int64
+  (** [allocated_bytes] returns the amount of memory allocated on the heap, in
+   * bytes. This call is cheap, but may return a value that is not 100% up to
+   * date. *)
+
 end
 end
+
 module Time : sig
 
 (** Timeout operations. *)

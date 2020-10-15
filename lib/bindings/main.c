@@ -19,6 +19,8 @@
 #include "hypercall.h"
 #include "xen/hvm/params.h"
 
+#include <assert.h>
+#include <limits.h>
 #include <stdlib.h>
 
 #define CAML_NAME_SPACE
@@ -109,18 +111,21 @@ mirage_xen_get_xenstore_page(value v_unit)
 
 /* @@noalloc */
 CAMLprim value
-mirage_xen_heap_get_pages_total(value v_unit)
+mirage_xen_get_heap_total_bytes(value v_unit)
 {
-    return Val_long(solo5_heap_size / PAGE_SIZE);
+    assert(solo5_heap_size <= LONG_MAX);
+    return caml_copy_int64(solo5_heap_size);
 }
 
 extern size_t malloc_footprint(void);
 
 /* @@noalloc */
 CAMLprim value
-mirage_xen_heap_get_pages_used(value v_unit)
+mirage_xen_get_heap_allocated_bytes(value v_unit)
 {
-    return Val_long(malloc_footprint() / PAGE_SIZE);
+    size_t allocated_bytes = malloc_footprint();
+    assert(allocated_bytes <= LONG_MAX);
+    return caml_copy_int64(allocated_bytes);
 }
 
 extern void _nolibc_init(uintptr_t, size_t);
