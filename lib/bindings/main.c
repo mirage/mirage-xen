@@ -32,6 +32,7 @@
 static char *unused_argv[] = { "mirage", NULL };
 static const char *solo5_cmdline = "";
 static size_t solo5_heap_size;
+static uintptr_t sp_at_start;
 
 CAMLprim value
 mirage_xen_get_cmdline(value v_unit)
@@ -107,30 +108,53 @@ mirage_xen_get_xenstore_page(value v_unit)
                     (void *)(raw_pfn << PAGE_SHIFT), PAGE_SIZE));
 }
 
-/* @@noalloc */
+/*
+ * Caller: OS.Memory, @@noalloc
+ */
 CAMLprim value
-mirage_xen_heap_get_pages_total(value v_unit)
+mirage_memory_get_heap_words(value v_unit)
 {
-    return Val_long(solo5_heap_size / PAGE_SIZE);
+    return Val_long(solo5_heap_size / sizeof(value));
 }
 
 extern size_t malloc_footprint(void);
 
-/* @@noalloc */
+/*
+ * Caller: OS.Memory, @@noalloc
+ */
 CAMLprim value
-mirage_xen_heap_get_pages_used(value v_unit)
+mirage_memory_get_live_words(value v_unit)
 {
-    return Val_long(malloc_footprint() / PAGE_SIZE);
+    return Val_long(malloc_footprint() / sizeof(value));
+}
+
+/*
+ * Caller: OS.Memory, @@noalloc
+ *
+ * The implementation currently uses a hard-coded value for the stack guard
+ * size; this must be kept in sync with nolibc's sbrk() implementation.
+ * TODO: Consider providing a formal interface for this.
+ */
+CAMLprim value
+mirage_memory_get_stack_words(value v_unit)
+{
+    int dummy;
+
+    return Val_long((sp_at_start - (uintptr_t)&dummy + 0x100000)
+            / sizeof(value));
 }
 
 extern void _nolibc_init(uintptr_t, size_t);
 
 int solo5_app_main(const struct solo5_start_info *si)
 {
-    solo5_cmdline = si->cmdline;
-    solo5_heap_size = si->heap_size;
+    int dummy;
+
+    sp_at_start = (uintptr_t)&dummy;
     _nolibc_init(si->heap_start, si->heap_size);
+    solo5_heap_size = si->heap_size;
     gnttab_init();
+    solo5_cmdline = si->cmdline;
     caml_startup(unused_argv);
 
     return 0;
