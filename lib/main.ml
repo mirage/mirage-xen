@@ -21,7 +21,7 @@
  * 02111-1307, USA.
  *)
 
-external evtchn_block_domain : [`Time] Time.Monotonic.t -> unit =
+external evtchn_block_domain : Time.t -> unit =
     "mirage_xen_evtchn_block_domain" [@@noalloc]
 external evtchn_demux_pending: unit -> bool =
     "mirage_xen_evtchn_demux_pending" [@@noalloc]
@@ -32,7 +32,7 @@ let evtchn = Eventchn.init ()
 let run t =
   let rec aux () =
     Lwt.wakeup_paused ();
-    Time.restart_threads Time.Monotonic.time;
+    Time.restart_threads Time.time;
     match Lwt.poll t with
     | Some () ->
         ()
@@ -49,7 +49,7 @@ let run t =
         end else begin
           let timeout =
             match Time.select_next () with
-            |None -> Time.Monotonic.(time () + of_nanoseconds 86_400_000_000_000L) (* one day = 24 * 60 * 60 s *)
+            |None -> Int64.add (Time.time ()) (Duration.of_day 1)
             |Some tm -> tm
           in
           MProf.Trace.(note_hiatus Wait_for_work);
