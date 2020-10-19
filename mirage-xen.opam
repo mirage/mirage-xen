@@ -31,12 +31,6 @@ depends: [
   "bheap" {>= "2.0.0"}
   "duration"
 ]
-conflicts: [
-  "mirage-xen-minios"
-  "mirage-xen-ocaml"
-  "mirage-xen-posix"
-  "minios-xen"
-]
 available: [
   (arch = "x86_64" ) &
   (os = "linux" | os = "freebsd" | os = "openbsd")
