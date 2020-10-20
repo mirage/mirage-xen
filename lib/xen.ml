@@ -15,8 +15,6 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *)
 
-external virt_to_mfn : nativeint -> nativeint = "stub_virt_to_mfn"
-
 open Lwt
 
 module Gntref = struct
