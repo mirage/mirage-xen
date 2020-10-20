@@ -1,7 +1,111 @@
+## v6.0.0 (2020-10-20)
+
+Version 6.0.0 is a re-write of the MirageOS Xen platform stack, with the
+overall goal of replacing Mini-OS and moving to a minimal, legacy-free codebase
+which builds MirageOS unikernels as Xen PVHv2 domUs only. At the same time,
+this change aligns the Xen backend with existing Solo5 backends as much as is
+practical and replaces the OCaml runtime with that provided by
+ocaml-freestanding.
+
+This is a breaking change. MirageOS libraries and applications that make use of
+Xen-specific APIs will need to be updated. See below for a list of the
+interfaces that have changed.
+
+Requirements changes:
+
+* OCaml 4.08 or later and Dune 2.6 or later are required.
+* Xen version 4.10 or later is required, as this is the earliest version which
+  provides production-quality and stable PVHv2 APIs.
+* Additionally, the custom Xen version 4.8 used by Qubes OS 4.0 is supported,
+  as this has enough of PVHv2 backported to it.
+* Only x86\_64 hosts with HAP (EPT) are supported. Support for ARM32 has been
+  removed. Support for ARM64 may be added at a later date if there is interest.
+
+Security posture improvements:
+
+With the move to a Solo5 and ocaml-freestanding base MirageOS gains several
+notable improvements to security posture for unikernels on Xen:
+
+* Stack smashing protection is enabled unconditionally for all C code.
+* W^X is enforced throughout, i.e. `.text` is read-execute, `.rodata` is
+  read-only, non-executable and `.data`, heap and stack are read-write and
+  non-executable.
+* The memory allocator used by the OCaml runtime is now dlmalloc (provided by
+  ocaml-freestanding), which is a big improvement over the Mini-OS malloc, and
+  incorporates features such as heap canaries.
+
+Interface changes:
+
+* The `Eventchn` and `Generation` modules, previously provided by `xen-evtchn`
+  have been folded into `mirage-xen` as `OS.Eventchn` and `OS.Generation`
+  respectively.  Applications and libraries should replace any dependency on
+  `xen-evtchn` with one on `mirage-xen {>= "6.0.0"}` and use the corresponding
+  submodules in `OS` directly.
+* The `OS.MM` module has been replaced with a new `OS.Memory` module, with a
+  statistics interface modeled after stdlib's `Gc` stat type. All units use the
+  system word size rather than pages, which were ill-defined.
+* `OS.Sched` has been removed. These interfaces (notably domain suspend/resume)
+  were present but never fully implemented in the old Xen stack.  They are not
+  required for PVH domains or full-system suspend/resume and
+  applications/libraries should remove any calls to them.
+* `OS.Start_info` has been removed. These interfaces were specific to Xen PV,
+  and don't have a direct equivalent for PVH domains.
+* `OS.Xenctrl` has been removed. There are no known users of these interfaces,
+  which appear to be a left-over from earlier versions of the Xen stack.
+* `OS.Xen.virt_to_mfn` has been removed. This is a little-used low-level
+  vestige of Mini-OS, and in the Solo5-based virtual memory arrangement should
+  be replaced with the equivalent computation (`addr >> 12`) in application
+  code directly.
+
+Dependency changes:
+
+* Now depends on `solo5-bindings-xen` (for the low-level VCPU initialisation
+  and startup) and `ocaml-freestanding` (for the OCaml runtime). It follows
+  that `-freestanding` variants of existing packages such as `zarith` and `gmp`
+  are used instead of `-xen` variants.
+* The `io-page-xen` package is no longer used. Applications/libraries depending
+  on it should replace the dependency with one on `io-page`.
+* As mentioned above, the `xen-evtchn` package is no longer used and
+  applications/libraries should replace their dependency with one on
+  `mirage-xen {>= "6.0.0"}`.
+
+C stubs changes:
+
+* `alloc_pages_stubs.c`: added, provides stubs for `Io_page`, as in `mirage-solo5`.
+* `checksum_stubs.c`: added, provides stubs for `Tcpip`, as in `mirage-solo5`.
+* `exit_stubs.c`: removed, equivalent provided by `ocaml-freestanding`.
+* `sched_stubs.c`: removed, no longer required.
+* `start_info_stubs.c`: removed, no longer required.
+* `xb_stubs.c`: removed, no users and no longer required.
+
+Apart from the above, the majority of C stubs which are used by `mirage-xen`
+have been renamed to follow the `mirage_xen_XXX` rather than `stub_XXX`
+convention.
+
+The low-level C interfaces to Xen event channels (`evtchn.c`) and grant tables
+(`gnttab.c`) have been re-written from scratch. Some additional interfaces have
+been added to `main.c` to replace functionality that was previously part of
+`start_info_stubs.c` (obtaining initial PV console and Xenstore ports and I/O
+rings from Xen).
+
+Due to issues with mixing PIC and non-PIC code when compiling the C stubs with
+Dune, the build system has been adapted to use a foreign Makefile for
+`libmirage-xen_bindings.a`. This is the recommended method to use when building
+libraries containing C code for use with MirageOS. See conversation in #23 for
+details.
+
+Relationship with the Solo5 Xen bindings:
+
+For Xen, Solo5 only provides the initial PVH boot, VCPU setup/traps and C-side
+PV console code. Some Mirage-internal private APIs are provided to allow
+`mirage-xen` to interact with the hypervisor -- this is fully explained in
+Solo5 commit Solo5/solo5@f4b47d1 and follow-ups.
+
 ## v5.0.0 (2019-11-01)
 
 * Revert the 4.0.0 change, Os_xen is now OS.Xen again (#20 @dinosaure)
-* Adapt to mirage-runtime hooks (see mirage/mirage#1010) for at_enter_iter / at_exit_iter / at_exit (#21 @hannesm)
+* Adapt to mirage-runtime hooks (see mirage/mirage#1010) for at_enter_iter /
+  at_exit_iter / at_exit (#21 @hannesm)
 * Bump lower OCaml version to 4.06.0 (#21 @hannesm)
 
 ## v4.0.1 (2019-07-05)
