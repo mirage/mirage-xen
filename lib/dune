@@ -1,7 +1,7 @@
 (library
  (name oS)
  (public_name mirage-xen)
- (libraries lwt cstruct xenstore.client shared-memory-ring-lwt
+ (libraries lwt cstruct xenstore.client shared-memory-ring-lwt lwt-dllist
             mirage-profile logs io-page fmt mirage-runtime bheap duration))
 
 (rule
