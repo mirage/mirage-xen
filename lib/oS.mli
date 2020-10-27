@@ -39,20 +39,19 @@ module Memory : sig
 (** Memory management operations. *)
 
 (** Memory allocation statistics. Units are the system word size, as used by
- * the OCaml stdlib Gc module. *)
+    the OCaml stdlib Gc module. *)
 type stat = {
   heap_words : int;  (** total number of words allocatable on the heap. *)
   live_words : int;  (** number of live (i.e. allocated) words on the heap. *)
   stack_words : int; (** number of words in use by the program stack.
-                      * This includes any space reserved by a stack guard. *)
+                         This includes any space reserved by a stack guard. *)
   free_words : int;  (** number of free (i.e. allocatable) words on the heap. *)
 }
 
 val quick_stat: unit -> stat
 (** [quick_stat ()]  returns memory allocation statistics. This call is
- * computationally cheap, but the returned values may not be completely
- * accurate. *)
-
+    computationally cheap, but the returned values may not be completely
+    accurate. *)
 end
 
 module Time : sig
