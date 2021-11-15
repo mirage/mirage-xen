@@ -11,7 +11,7 @@ CFLAGS := $(FREESTANDING_CFLAGS) \
 .PHONY: all clean
 all: libmirage-xen_bindings.a
 
-OBJS=alloc_pages_stubs.o atomic_stubs.o barrier_stubs.o bmap.o clock_stubs.o cstruct_stubs.o evtchn.o gnttab.o main.o
+OBJS=atomic_stubs.o barrier_stubs.o bmap.o clock_stubs.o cstruct_stubs.o evtchn.o gnttab.o main.o
 
 libmirage-xen_bindings.a: $(OBJS)
 	$(AR) r $@ $^

@@ -22,7 +22,7 @@ depends: [
   "conf-pkg-config"
   "lwt-dllist"
   "mirage-profile" {>= "0.3"}
-  "io-page" {>= "2.0.0"}
+  "io-page" {>= "2.4.0"}
   "mirage-runtime" {>= "3.7.0"}
   "logs"
   "fmt"
