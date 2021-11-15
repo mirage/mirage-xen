@@ -1,5 +1,5 @@
 ifneq (, $(shell command -v opam))
-	PKG_CONFIG_PATH ?= $(shell opam config var prefix)/lib/pkgconfig
+	PKG_CONFIG_PATH ?= $(shell opam var prefix)/lib/pkgconfig
 endif
 
 CC ?= cc
