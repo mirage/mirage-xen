@@ -1,3 +1,12 @@
+## v6.0.1 (2021-11-18)
+
+* Fix OCaml documentation strings (#30 @hannesm)
+* Add caml_get_wall_clock to retrieve the wall clock as int64 (#31 @hannesm)
+* Don't require opam for the bindings compilation (#32 @sternenseemann)
+* Remove checksum_stubs and alloc_pages_stubs (available in mirage-tcpip
+  and io-page), to keep in sync with mirage-solo5 (#33 @dinosaure, adapted
+  by @hannesm to mirage-xen)
+
 ## v6.0.0 (2020-10-20)
 
 Version 6.0.0 is a re-write of the MirageOS Xen platform stack, with the
