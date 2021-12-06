@@ -1,0 +1,21 @@
+(executable
+ (name main)
+ (link_flags -cclib "-z solo5-abi=xen")
+ (libraries mirage-xen)
+ (foreign_stubs
+  (language c)
+  (names manifest)))
+
+(rule
+ (targets manifest.c)
+ (deps manifest.json)
+ (action
+  (run solo5-elftool gen-manifest manifest.json manifest.c)))
+
+(rule
+ (alias runtest)
+ (deps main.exe)
+ (enabled_if
+  (= %{context_name} freestanding))
+ (action
+  (run echo OK)))

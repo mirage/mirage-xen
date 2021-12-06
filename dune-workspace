@@ -1,0 +1,10 @@
+(lang dune 2.0)
+
+(context default)
+
+(context
+ (default
+  (name freestanding)
+  (merlin)
+  (toolchain freestanding)
+  (host default)))

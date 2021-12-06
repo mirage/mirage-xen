@@ -1,7 +1,21 @@
 (library
  (name oS)
  (public_name mirage-xen)
- (libraries lwt cstruct xenstore.client shared-memory-ring-lwt lwt-dllist
-   mirage-profile logs io-page fmt mirage-runtime bheap duration))
+ (libraries
+  lwt
+  cstruct
+  xenstore.client
+  shared-memory-ring-lwt
+  lwt-dllist
+  mirage-profile
+  logs
+  io-page
+  fmt
+  mirage-runtime
+  bheap
+  duration)
+ (foreign_stubs
+  (language c)
+  (names main evtchn gnttab bmap clock_stubs)))
 
 (include_subdirs unqualified)
