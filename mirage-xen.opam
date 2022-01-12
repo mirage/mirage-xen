@@ -38,3 +38,8 @@ This package provides the MirageOS `OS` library for
 Xen targets, which handles the main loop and timers.  It also provides
 the low level C startup code and C stubs required by the OCaml code.
 """
+pin-depends:[ 
+  [ "mirage-runtime.4.0.0" "git+https://github.com/mirage/mirage.git#59101cd795e741982a0a4580c113072339e1389b" ]
+  [ "functoria-runtime.4.0.0" "git+https://github.com/mirage/mirage.git#59101cd795e741982a0a4580c113072339e1389b" ]
+  [ "functoria.4.0.0" "git+https://github.com/mirage/mirage.git#59101cd795e741982a0a4580c113072339e1389b" ]
+]
