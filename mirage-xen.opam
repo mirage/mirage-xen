@@ -19,15 +19,12 @@ depends: [
   "lwt" {>= "2.4.3"}
   "shared-memory-ring-lwt"
   "xenstore" {>= "1.2.5"}
-  "conf-pkg-config"
   "lwt-dllist"
   "mirage-profile" {>= "0.3"}
   "io-page" {>= "2.4.0"}
-  "mirage-runtime" {>= "3.7.0"}
+  "mirage-runtime" {>= "4.0.0"}
   "logs"
   "fmt" {>= "0.8.5"}
-  "ocaml-freestanding" {>= "0.6.2"}
-  "solo5-bindings-xen" {>= "0.6.7"}
   "bheap" {>= "2.0.0"}
   "duration"
 ]
@@ -41,3 +38,8 @@ This package provides the MirageOS `OS` library for
 Xen targets, which handles the main loop and timers.  It also provides
 the low level C startup code and C stubs required by the OCaml code.
 """
+pin-depends:[ 
+  [ "mirage-runtime.4.0.0" "git+https://github.com/mirage/mirage.git#59101cd795e741982a0a4580c113072339e1389b" ]
+  [ "functoria-runtime.4.0.0" "git+https://github.com/mirage/mirage.git#59101cd795e741982a0a4580c113072339e1389b" ]
+  [ "functoria.4.0.0" "git+https://github.com/mirage/mirage.git#59101cd795e741982a0a4580c113072339e1389b" ]
+]
