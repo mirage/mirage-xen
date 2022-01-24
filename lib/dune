@@ -1,5 +1,5 @@
 (library
- (name oS)
+ (name xen_os)
  (public_name mirage-xen)
  (libraries
   lwt
