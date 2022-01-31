@@ -14,7 +14,7 @@ build: [
 ]
 depends: [
   "ocaml" {>= "4.08.0"}
-  "dune" {>= "2.6.0"}
+  "dune" {>= "2.7.0"}
   "cstruct" {>= "1.0.1"}
   "lwt" {>= "2.4.3"}
   "shared-memory-ring-lwt"
