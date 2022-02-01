@@ -1,3 +1,12 @@
+## v7.0.0 (2021-01-31)
+
+* Disable formatting to allow CI to succeed (@hannesm, #34)
+* Be able to compile & generate documentation even if 
+  the package does not exists into the expected `dune`'s workspace
+  (@TheLortex, @dinosaure, #37)
+* **breaking change** `mirage-xen` defines its own `OS` module: `Xen_os`
+  (@dinosaure, #38)
+
 ## v6.0.1 (2021-11-18)
 
 * Fix OCaml documentation strings (#30 @hannesm)
