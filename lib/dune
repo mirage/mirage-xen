@@ -24,8 +24,8 @@
  (action (copy %{dep} %{target})))
 
 (rule
- (enabled_if (= %{context_name} freestanding))
- (target libmirage-xen_bindings.freestanding.a)
+ (enabled_if (= %{context_name} solo5))
+ (target libmirage-xen_bindings.solo5.a)
  (action (copy bindings/libmirage-xen_bindings.a %{target})))
 
 (rule

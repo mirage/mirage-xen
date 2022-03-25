@@ -1,7 +1,7 @@
 .PHONY: all clean
 all: libmirage-xen_bindings.a
 
-CC=ocamlfind -toolchain freestanding ocamlopt
+CC=ocamlfind -toolchain solo5 ocamlopt
 CFLAGS=-cclib "-I ./include/"
 OBJS=bmap.o clock_stubs.o evtchn.o gnttab.o main.o
 
