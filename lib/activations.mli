@@ -19,35 +19,34 @@
 type event
 (** identifies the an event notification received from xen *)
 
-val program_start: event
+val program_start : event
 (** represents an event which 'fired' when the program started *)
 
-val after: Eventchn.t -> event -> event Lwt.t
-(** [next channel event] blocks until the system receives an event
-    newer than [event] on channel [channel]. If an event is received
-    while we aren't looking then this will be remembered and the
-    next call to [after] will immediately unblock. If the system
-    is suspended and then resumed, all event channel bindings are invalidated
-    and this function will fail with Generation.Invalid *)
+val after : Eventchn.t -> event -> event Lwt.t
+(** [next channel event] blocks until the system receives an event newer than
+    [event] on channel [channel]. If an event is received while we aren't
+    looking then this will be remembered and the next call to [after] will
+    immediately unblock. If the system is suspended and then resumed, all event
+    channel bindings are invalidated and this function will fail with
+    Generation.Invalid *)
 
 (** {2 Low level interface} *)
 
 val wait : Eventchn.t -> unit Lwt.t
-(** [wait evtchn] is a cancellable thread that will wake up when
-    [evtchn] is notified. Cancel it if you are no longer interested in
-    waiting on [evtchn]. Note that if the notification is sent before
-    [wait] is called then the notification is lost. *)
+(** [wait evtchn] is a cancellable thread that will wake up when [evtchn] is
+    notified. Cancel it if you are no longer interested in waiting on [evtchn].
+    Note that if the notification is sent before [wait] is called then the
+    notification is lost. *)
 
 val run : Eventchn.handle -> unit
-(** [run ()] goes through the event mask and activate any events,
-    potentially spawning new threads. This function is called by
-    [Main.run]. Do not call it unless you know what you are doing. *)
+(** [run ()] goes through the event mask and activate any events, potentially
+    spawning new threads. This function is called by [Main.run]. Do not call it
+    unless you know what you are doing. *)
 
 val resume : unit -> unit
-(** [resume] needs to be called after the unikernel is
-    resumed. However, this function is automatically called by
-    {!Sched.suspend}. Do NOT use it unless you know what you are
-    doing. *)
+(** [resume] needs to be called after the unikernel is resumed. However, this
+    function is automatically called by {!Sched.suspend}. Do NOT use it unless
+    you know what you are doing. *)
 
 val dump : unit -> unit
 (** [dump ()] prints internal state to the console for debugging *)

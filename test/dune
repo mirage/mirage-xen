@@ -1,5 +1,6 @@
 (executable
- (enabled_if (= %{context_name} freestanding))
+ (enabled_if
+  (= %{context_name} freestanding))
  (name main)
  (link_flags -cclib "-z solo5-abi=xen")
  (libraries mirage-xen)

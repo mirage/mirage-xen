@@ -1,19 +1,8 @@
 (library
  (name xen_os)
  (public_name mirage-xen)
- (libraries
-  lwt
-  cstruct
-  xenstore.client
-  shared-memory-ring-lwt
-  lwt-dllist
-  mirage-profile
-  logs
-  io-page
-  fmt
-  mirage-runtime
-  bheap
-  duration)
+ (libraries lwt cstruct xenstore.client shared-memory-ring-lwt lwt-dllist
+   mirage-profile logs io-page fmt mirage-runtime bheap duration)
  (no_dynlink)
  (foreign_archives mirage-xen_bindings))
 
@@ -21,15 +10,19 @@
  (target libmirage-xen_bindings.a)
  (deps
   (:dep libmirage-xen_bindings.%{context_name}.a))
- (action (copy %{dep} %{target})))
+ (action
+  (copy %{dep} %{target})))
 
 (rule
- (enabled_if (= %{context_name} solo5))
+ (enabled_if
+  (= %{context_name} solo5))
  (target libmirage-xen_bindings.solo5.a)
- (action (copy bindings/libmirage-xen_bindings.a %{target})))
+ (action
+  (copy bindings/libmirage-xen_bindings.a %{target})))
 
 (rule
  (target libmirage-xen_bindings.default.a)
- (action (copy stub/libmirage-xen_bindings.a %{target})))
+ (action
+  (copy stub/libmirage-xen_bindings.a %{target})))
 
 (include_subdirs unqualified)
