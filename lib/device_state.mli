@@ -1,5 +1,5 @@
 type state =
-    Unknown
+  | Unknown
   | Initialising
   | InitWait
   | Initialised
@@ -8,6 +8,7 @@ type state =
   | Closed
   | Reconfiguring
   | Reconfigured
+
 val of_string : string -> state
 val to_string : state -> string
 val prettyprint : state -> string

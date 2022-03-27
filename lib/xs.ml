@@ -15,42 +15,42 @@
 
 open Lwt
 
-type page = (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout)
-    Bigarray.Array1.t
+type page =
+  (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
 
-external mirage_xen_get_xenstore_evtchn: unit -> int =
-    "mirage_xen_get_xenstore_evtchn"
-external mirage_xen_get_xenstore_page: unit -> page =
-    "mirage_xen_get_xenstore_page"
+external mirage_xen_get_xenstore_evtchn : unit -> int
+  = "mirage_xen_get_xenstore_evtchn"
 
-let get_xenstore_evtchn () = Eventchn.of_int @@
-    mirage_xen_get_xenstore_evtchn ()
+external mirage_xen_get_xenstore_page : unit -> page
+  = "mirage_xen_get_xenstore_page"
 
-let get_xenstore_page () = Cstruct.of_bigarray @@
-    mirage_xen_get_xenstore_page ()
+let get_xenstore_evtchn () =
+  Eventchn.of_int @@ mirage_xen_get_xenstore_evtchn ()
+
+let get_xenstore_page () =
+  Cstruct.of_bigarray @@ mirage_xen_get_xenstore_page ()
 
 (* Mirage transport for XenStore. *)
 module IO = struct
-    type 'a t = 'a Lwt.t
-    type channel = {
-      mutable page: Cstruct.t;
-      mutable evtchn: Eventchn.t;
-    }
-    let return = Lwt.return
-    let (>>=) = Lwt.bind
-    exception Cannot_destroy
+  type 'a t = 'a Lwt.t
+  type channel = { mutable page : Cstruct.t; mutable evtchn : Eventchn.t }
 
-    let h = Eventchn.init ()
+  let return = Lwt.return
+  let ( >>= ) = Lwt.bind
 
-    type backend = [ `unix | `xen ]
-    let backend = `xen
+  exception Cannot_destroy
 
-    let singleton_client = ref None
+  let h = Eventchn.init ()
 
-    let create () =
-      match !singleton_client with
-      | Some x -> Lwt.return x
-      | None ->
+  type backend = [ `unix | `xen ]
+
+  let backend = `xen
+  let singleton_client = ref None
+
+  let create () =
+    match !singleton_client with
+    | Some x -> Lwt.return x
+    | None ->
         let page = get_xenstore_page () in
         Xenstore_ring.Ring.init page;
         let evtchn = get_xenstore_evtchn () in
@@ -59,50 +59,50 @@ module IO = struct
         singleton_client := Some c;
         Lwt.return c
 
-    let refresh () =
-      match !singleton_client with
-      | Some x ->
+  let refresh () =
+    match !singleton_client with
+    | Some x ->
         x.page <- get_xenstore_page ();
         Xenstore_ring.Ring.init x.page;
         x.evtchn <- get_xenstore_evtchn ();
         Eventchn.unmask h x.evtchn
-      | None -> ()
+    | None -> ()
 
-    let destroy _ =
-      Printf.printf "ERROR: It's not possible to destroy the default xenstore connection\n%!";
-      fail Cannot_destroy
+  let destroy _ =
+    Printf.printf
+      "ERROR: It's not possible to destroy the default xenstore connection\n%!";
+    fail Cannot_destroy
 
-    (* XXX: unify with ocaml-xenstore-xen/xen/lib/xs_transport_domain *)
-    let read t buf ofs len =
-      let rec loop event =
-        let n = Xenstore_ring.Ring.Front.unsafe_read t.page buf ofs len in
-        if n = 0 then begin
-          Activations.after t.evtchn event
-          >>= fun event ->
-          MProf.Trace.label "Xs.read waiting";
-          loop event
-        end else begin
-          Eventchn.notify h t.evtchn;
-          return n
-        end in
-      loop Activations.program_start
+  (* XXX: unify with ocaml-xenstore-xen/xen/lib/xs_transport_domain *)
+  let read t buf ofs len =
+    let rec loop event =
+      let n = Xenstore_ring.Ring.Front.unsafe_read t.page buf ofs len in
+      if n = 0 then (
+        Activations.after t.evtchn event >>= fun event ->
+        MProf.Trace.label "Xs.read waiting";
+        loop event)
+      else (
+        Eventchn.notify h t.evtchn;
+        return n)
+    in
+    loop Activations.program_start
 
-    (* XXX: unify with ocaml-xenstore-xen/xen/lib/xs_transport_domain *)
-    let write t buf ofs len =
-      let rec loop event buf ofs len =
-        let n = Xenstore_ring.Ring.Front.unsafe_write t.page buf ofs len in
-        if n > 0 then Eventchn.notify h t.evtchn;
-        if n < len then begin
-          Activations.after t.evtchn event
-          >>= fun event ->
-          MProf.Trace.label "Xs.write waiting";
-          loop event buf (ofs + n) (len - n)
-        end else return () in
-      loop Activations.program_start buf ofs len
+  (* XXX: unify with ocaml-xenstore-xen/xen/lib/xs_transport_domain *)
+  let write t buf ofs len =
+    let rec loop event buf ofs len =
+      let n = Xenstore_ring.Ring.Front.unsafe_write t.page buf ofs len in
+      if n > 0 then Eventchn.notify h t.evtchn;
+      if n < len then (
+        Activations.after t.evtchn event >>= fun event ->
+        MProf.Trace.label "Xs.write waiting";
+        loop event buf (ofs + n) (len - n))
+      else return ()
+    in
+    loop Activations.program_start buf ofs len
 end
 
-include Xs_client_lwt.Client(IO)
+include Xs_client_lwt.Client (IO)
 
 let resume client =
-  IO.refresh();
+  IO.refresh ();
   resume client

@@ -33,25 +33,18 @@ type t = int64
    | Sleepers                                                        |
    +-----------------------------------------------------------------+ *)
 
-type sleep = {
-  time : t;
-  mutable canceled : bool;
-  thread : unit Lwt.u;
-}
+type sleep = { time : t; mutable canceled : bool; thread : unit Lwt.u }
 
-module SleepQueue =
-  Binary_heap.Make (struct
-                      type t = sleep
-                      let compare { time = t1; _ } { time = t2; _ } =
-                        compare t1 t2
-                    end)
+module SleepQueue = Binary_heap.Make (struct
+  type t = sleep
+
+  let compare { time = t1; _ } { time = t2; _ } = compare t1 t2
+end)
 
 (* Threads waiting for a timeout to expire: *)
 let sleep_queue =
-  let dummy = {
-    time = time ();
-    canceled = false;
-    thread = Lwt.wait () |> snd; }
+  let dummy =
+    { time = time (); canceled = false; thread = Lwt.wait () |> snd }
   in
   SleepQueue.create ~dummy 0
 
@@ -63,7 +56,7 @@ let sleep_queue =
 let new_sleeps = ref []
 
 let sleep_ns d =
-  let (res, w) = MProf.Trace.named_task "sleep" in
+  let res, w = MProf.Trace.named_task "sleep" in
   let t = Int64.add (time ()) d in
   let sleeper = { time = t; canceled = false; thread = w } in
   new_sleeps := sleeper :: !new_sleeps;
@@ -73,11 +66,8 @@ let sleep_ns d =
 exception Timeout
 
 let timeout d = sleep_ns d >>= fun () -> Lwt.fail Timeout
-
-let with_timeout d f = Lwt.pick [timeout d; Lwt.apply f ()]
-
-let in_the_past now t =
-  t = 0L || t <= now ()
+let with_timeout d f = Lwt.pick [ timeout d; Lwt.apply f () ]
+let in_the_past now t = t = 0L || t <= now ()
 
 let rec restart_threads now =
   match SleepQueue.minimum sleep_queue with
@@ -101,8 +91,7 @@ let rec get_next_timeout () =
   | { canceled = true; _ } ->
       SleepQueue.remove sleep_queue;
       get_next_timeout ()
-  | { time; _ } ->
-      Some time
+  | { time; _ } -> Some time
 
 let select_next () =
   (* Transfer all sleepers added since the last iteration to the main

@@ -15,10 +15,12 @@
  *)
 open Lwt.Infix
 
-external evtchn_get_nr_events: unit -> int =
-    "mirage_xen_evtchn_get_nr_events" [@@noalloc]
-external evtchn_test_and_clear: int -> bool =
-    "mirage_xen_evtchn_test_and_clear" [@@noalloc]
+external evtchn_get_nr_events : unit -> int = "mirage_xen_evtchn_get_nr_events"
+  [@@noalloc]
+
+external evtchn_test_and_clear : int -> bool
+  = "mirage_xen_evtchn_test_and_clear"
+  [@@noalloc]
 
 let nr_events = evtchn_get_nr_events ()
 let event_cb = Array.init nr_events (fun _ -> Lwt_dllist.create ())
@@ -38,35 +40,31 @@ type event = int
 
 let program_start = min_int
 
-type port = {
-  mutable counter: event;
-  c: unit Lwt_condition.t;
-}
+type port = { mutable counter : event; c : unit Lwt_condition.t }
 
-let ports = Array.init nr_events (fun port -> {
-  counter = program_start;
-  c = MProf.Trace.named_condition ("port-" ^ string_of_int port)
-})
+let ports =
+  Array.init nr_events (fun port ->
+      {
+        counter = program_start;
+        c = MProf.Trace.named_condition ("port-" ^ string_of_int port);
+      })
 
 let dump () =
   Printf.printf "Number of received event channel events:\n";
   for i = 0 to nr_events - 1 do
-    if ports.(i).counter <> program_start
-    then Printf.printf "port %d: %d\n%!" i (ports.(i).counter - program_start)
+    if ports.(i).counter <> program_start then
+      Printf.printf "port %d: %d\n%!" i (ports.(i).counter - program_start)
   done
 
 let after evtchn counter =
   let port = Eventchn.to_int evtchn in
   let rec loop () =
-    if ports.(port).counter <= counter && (Eventchn.is_valid evtchn) then begin
-      Lwt_condition.wait ports.(port).c
-      >>= fun () ->
-      loop ()
-    end else Lwt.return_unit in
-  loop ()
-  >>= fun () ->
-  if Eventchn.is_valid evtchn
-  then Lwt.return ports.(port).counter
+    if ports.(port).counter <= counter && Eventchn.is_valid evtchn then
+      Lwt_condition.wait ports.(port).c >>= fun () -> loop ()
+    else Lwt.return_unit
+  in
+  loop () >>= fun () ->
+  if Eventchn.is_valid evtchn then Lwt.return ports.(port).counter
   else Lwt.fail Generation.Invalid
 
 (* Low-level interface *)
@@ -75,39 +73,40 @@ let after evtchn counter =
    if the event came in when we weren't looking then it is lost and
    we will block forever. *)
 let wait evtchn =
-  if Eventchn.is_valid evtchn then begin
-	  let port = Eventchn.to_int evtchn in
-	  let th, u = MProf.Trace.named_task ("wait-on-port-" ^ string_of_int port) in
-	  let node = Lwt_dllist.add_l u event_cb.(port) in
-	  Lwt.on_cancel th (fun _ -> Lwt_dllist.remove node);
-	  th
-  end else begin
-          Printf.printf "Activations.wait %d: Generation.Invalid\n%!" (Eventchn.to_int evtchn);
-          Lwt.fail Generation.Invalid
-  end
+  if Eventchn.is_valid evtchn then (
+    let port = Eventchn.to_int evtchn in
+    let th, u = MProf.Trace.named_task ("wait-on-port-" ^ string_of_int port) in
+    let node = Lwt_dllist.add_l u event_cb.(port) in
+    Lwt.on_cancel th (fun _ -> Lwt_dllist.remove node);
+    th)
+  else (
+    Printf.printf "Activations.wait %d: Generation.Invalid\n%!"
+      (Eventchn.to_int evtchn);
+    Lwt.fail Generation.Invalid)
 
 (* Go through the event mask and activate any events, potentially spawning
    new threads *)
 let run _ =
   for port = 0 to nr_events - 1 do
-    if evtchn_test_and_clear port then begin
-      Lwt_dllist.iter_node_l (fun node ->
-        let u = Lwt_dllist.get node in
-        Lwt_dllist.remove node;
-        Lwt.wakeup_later u ();
-      ) event_cb.(port);
+    if evtchn_test_and_clear port then (
+      Lwt_dllist.iter_node_l
+        (fun node ->
+          let u = Lwt_dllist.get node in
+          Lwt_dllist.remove node;
+          Lwt.wakeup_later u ())
+        event_cb.(port);
       ports.(port).counter <- ports.(port).counter + 1;
-      Lwt_condition.broadcast ports.(port).c ();
-    end
+      Lwt_condition.broadcast ports.(port).c ())
   done
 
 (* Note, this should be run *after* Generation.resume *)
 let resume () =
   for port = 0 to nr_events - 1 do
-    Lwt_dllist.iter_node_l (fun node ->
+    Lwt_dllist.iter_node_l
+      (fun node ->
         let u = Lwt_dllist.get node in
         Lwt_dllist.remove node;
-        Lwt.wakeup_later_exn u Generation.Invalid
-      ) event_cb.(port);
-    Lwt_condition.broadcast ports.(port).c ();
+        Lwt.wakeup_later_exn u Generation.Invalid)
+      event_cb.(port);
+    Lwt_condition.broadcast ports.(port).c ()
   done

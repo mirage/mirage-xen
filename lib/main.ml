@@ -21,10 +21,11 @@
  * 02111-1307, USA.
  *)
 
-external evtchn_block_domain : Time.t -> unit =
-    "mirage_xen_evtchn_block_domain" [@@noalloc]
-external evtchn_demux_pending: unit -> bool =
-    "mirage_xen_evtchn_demux_pending" [@@noalloc]
+external evtchn_block_domain : Time.t -> unit = "mirage_xen_evtchn_block_domain"
+  [@@noalloc]
+
+external evtchn_demux_pending : unit -> bool = "mirage_xen_evtchn_demux_pending"
+  [@@noalloc]
 
 let evtchn = Eventchn.init ()
 
@@ -34,32 +35,31 @@ let run t =
     Lwt.wakeup_paused ();
     Time.restart_threads Time.time;
     match Lwt.poll t with
-    | Some () ->
-        ()
+    | Some () -> ()
     | None ->
-        if evtchn_demux_pending () then begin
+        if evtchn_demux_pending () then (
           (* Some event channels have triggered, wake up threads
            * and continue without blocking. *)
           (* Call enter hooks. *)
-          Mirage_runtime.run_enter_iter_hooks () ;
+          Mirage_runtime.run_enter_iter_hooks ();
           Activations.run evtchn;
           (* Call leave hooks. *)
-          Mirage_runtime.run_leave_iter_hooks () ;
-          aux ()
-        end else begin
+          Mirage_runtime.run_leave_iter_hooks ();
+          aux ())
+        else
           let timeout =
             match Time.select_next () with
-            |None -> Int64.add (Time.time ()) (Duration.of_day 1)
-            |Some tm -> tm
+            | None -> Int64.add (Time.time ()) (Duration.of_day 1)
+            | Some tm -> tm
           in
           MProf.Trace.(note_hiatus Wait_for_work);
           evtchn_block_domain timeout;
           MProf.Trace.note_resume ();
           aux ()
-        end in
+  in
   aux ()
 
 let () =
   at_exit (fun () ->
-    Lwt.abandon_wakeups () ;
-    run (Mirage_runtime.run_exit_hooks ()))
+      Lwt.abandon_wakeups ();
+      run (Mirage_runtime.run_exit_hooks ()))
