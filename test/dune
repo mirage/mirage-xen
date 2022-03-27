@@ -1,6 +1,6 @@
 (executable
  (enabled_if
-  (= %{context_name} freestanding))
+  (= %{context_name} solo5))
  (name main)
  (link_flags -cclib "-z solo5-abi=xen")
  (libraries mirage-xen)
@@ -10,6 +10,8 @@
 
 (rule
  (targets manifest.c)
+ (enabled_if
+  (= %{context_name} solo5))
  (deps manifest.json)
  (action
   (run solo5-elftool gen-manifest manifest.json manifest.c)))
@@ -18,6 +20,6 @@
  (alias runtest)
  (deps main.exe)
  (enabled_if
-  (= %{context_name} freestanding))
+  (= %{context_name} solo5))
  (action
   (run echo OK)))
