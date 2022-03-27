@@ -1,6 +1,6 @@
 (executable
  (enabled_if
-  (= %{context_name} freestanding))
+  (= %{context_name} solo5))
  (name main)
  (link_flags -cclib "-z solo5-abi=xen")
  (libraries mirage-xen)
@@ -18,6 +18,6 @@
  (alias runtest)
  (deps main.exe)
  (enabled_if
-  (= %{context_name} freestanding))
+  (= %{context_name} solo5))
  (action
   (run echo OK)))
