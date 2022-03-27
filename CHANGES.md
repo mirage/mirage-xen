@@ -1,7 +1,13 @@
+## v7.1.0 (2022-03-27)
+
+* Rename the freestanding toolchain to solo5
+  (@dinosaure, @samoht, #39, #43)
+* Use ocamlformat (@samoht, #42)
+
 ## v7.0.0 (2021-01-31)
 
 * Disable formatting to allow CI to succeed (@hannesm, #34)
-* Be able to compile & generate documentation even if 
+* Be able to compile & generate documentation even if
   the package does not exists into the expected `dune`'s workspace
   (@TheLortex, @dinosaure, #37)
 * **breaking change** `mirage-xen` defines its own `OS` module: `Xen_os`
