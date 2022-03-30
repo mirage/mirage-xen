@@ -1,3 +1,8 @@
+## v7.2.0 (2022-03-30)
+
+* lib/bindings: pass CFLAGS from 6.x for compiling libimrage-xen_bindings.a
+  (@palainp, #47, solves mirage/mirage#1299)
+
 ## v7.1.0 (2022-03-27)
 
 * Rename the freestanding toolchain to solo5
