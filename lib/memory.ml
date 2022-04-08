@@ -20,7 +20,16 @@ external get_heap_words : unit -> int = "mirage_memory_get_heap_words"
 external get_live_words : unit -> int = "mirage_memory_get_live_words"
   [@@noalloc]
 
+external get_fast_memory_usage_words: unit -> int = "mirage_memory_get_fast_memory_usage_words"
+  [@@noalloc]
+
+external get_fast_live_words: unit -> int = "mirage_memory_get_fast_live_words"
+  [@@noalloc]
+
 external get_stack_words : unit -> int = "mirage_memory_get_stack_words"
+  [@@noalloc]
+
+external trim: unit -> unit = "mirage_trim_allocation"
   [@@noalloc]
 
 type stat = {
@@ -30,8 +39,20 @@ type stat = {
   free_words : int;
 }
 
-let quick_stat () =
+let stat () =
   let h = get_heap_words () in
   let l = get_live_words () in
   let s = get_stack_words () in
   { heap_words = h; live_words = l; stack_words = s; free_words = h - l - s }
+
+let quick_stat () =
+  let h = get_heap_words () in
+  let l = get_fast_live_words () in
+  let s = get_stack_words () in
+  { heap_words = h; live_words = l; stack_words = s; free_words = h - l - s; }
+
+let memory_usage_stat () =
+  let h = get_heap_words () in
+  let l = get_fast_memory_usage_words () in
+  let s = get_stack_words () in
+  { heap_words = h; live_words = l; stack_words = s; free_words = h - l - s; }
