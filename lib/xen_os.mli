@@ -48,19 +48,14 @@ module Memory : sig
       the OCaml stdlib Gc module. *)
 
   val stat: unit -> stat
-  (** [stat ()]  returns memory allocation statistics. This call is slower
-      than quick_stat, and the returned values are accurate. *)
+  (** [stat ()]  returns memory allocation statistics. This uses mallinfo
+      and walks over the entire heap. This call is slower than quick_stat. *)
 
   val quick_stat : unit -> stat
-  (** [quick_stat ()] returns memory allocation statistics. This call is
-      computationally cheap, but the returned values may not be completely
-      accurate. *)
+  (** [quick_stat ()] returns memory allocation statistics. This call uses
+      a precomputed value. This call is cheaper than stat, but the returned
+      values may not be completely accurate. *)
 
-  val memory_usage_stat: unit -> stat
-  (** [memory_usage_stat ()]  returns memory allocation statistics. This call is
-      computationally cheap, and the returned values (even not be completely
-      accurate) should be more precise thant quick_stat. *)
-  
   val trim: unit -> unit
   (** [trim ()]  release free memory from the heap (may update the value
       returned by quick_state) *)

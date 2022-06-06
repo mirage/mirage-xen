@@ -138,18 +138,9 @@ mirage_memory_get_live_words(value v_unit)
  * Caller: OS.Memory, @@noalloc
  */
 CAMLprim value
-mirage_memory_get_fast_memory_usage_words(value v_unit)
-{
-    return Val_long(malloc_memory_usage() / sizeof(value));
-}
-
-/*
- * Caller: OS.Memory, @@noalloc
- */
-CAMLprim value
 mirage_memory_get_fast_live_words(value v_unit)
 {
-    return Val_long(malloc_footprint() / sizeof(value));
+    return Val_long(malloc_memory_usage() / sizeof(value));
 }
 
 /*
