@@ -48,9 +48,11 @@ let run t =
           aux ())
         else
           let timeout =
-            match Time.select_next () with
-            | None -> Int64.add (Time.time ()) (Duration.of_day 1)
-            | Some tm -> tm
+            if Lwt.paused_count () > 0 then 0L
+            else
+              match Time.select_next () with
+              | None -> Int64.add (Time.time ()) (Duration.of_day 1)
+              | Some tm -> tm
           in
           MProf.Trace.(note_hiatus Wait_for_work);
           evtchn_block_domain timeout;
