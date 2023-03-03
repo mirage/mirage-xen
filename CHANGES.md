@@ -1,3 +1,8 @@
+## v8.0.2 (2023-03-03)
+
+* Provide Memory.metrics, a metrics source. Remove Mm.metrics metrics source.
+  (#51 @hannesm)
+
 ## v8.0.1 (2022-10-19)
 
 * Improve performance and take the opportunity to resolve pending
