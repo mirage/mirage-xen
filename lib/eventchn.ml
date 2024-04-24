@@ -31,7 +31,7 @@ external stub_bind_interdomain : handle -> int -> int -> int
 external stub_unmask : handle -> int -> unit = "mirage_xen_evtchn_unmask"
 
 external stub_notify : handle -> int -> unit = "mirage_xen_evtchn_notify"
-  [@@noalloc]
+[@@noalloc]
 
 external stub_unbind : handle -> int -> unit = "mirage_xen_evtchn_unbind"
 external stub_virq_dom_exc : unit -> int = "mirage_xen_evtchn_virq_dom_exc"

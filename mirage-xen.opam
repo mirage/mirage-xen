@@ -20,7 +20,6 @@ depends: [
   "shared-memory-ring-lwt"
   "xenstore" {>= "1.2.5"}
   "lwt-dllist"
-  "mirage-profile" {>= "0.3"}
   "io-page" {>= "2.4.0"}
   "mirage-runtime" {>= "4.0"}
   "logs"

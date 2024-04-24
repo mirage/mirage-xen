@@ -22,10 +22,10 @@
  *)
 
 external evtchn_block_domain : Time.t -> unit = "mirage_xen_evtchn_block_domain"
-  [@@noalloc]
+[@@noalloc]
 
 external evtchn_demux_pending : unit -> bool = "mirage_xen_evtchn_demux_pending"
-  [@@noalloc]
+[@@noalloc]
 
 let evtchn = Eventchn.init ()
 
@@ -54,9 +54,7 @@ let run t =
               | None -> Int64.add (Time.time ()) (Duration.of_day 1)
               | Some tm -> tm
           in
-          MProf.Trace.(note_hiatus Wait_for_work);
           evtchn_block_domain timeout;
-          MProf.Trace.note_resume ();
           aux ()
   in
   aux ()

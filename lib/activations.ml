@@ -16,11 +16,11 @@
 open Lwt.Infix
 
 external evtchn_get_nr_events : unit -> int = "mirage_xen_evtchn_get_nr_events"
-  [@@noalloc]
+[@@noalloc]
 
 external evtchn_test_and_clear : int -> bool
   = "mirage_xen_evtchn_test_and_clear"
-  [@@noalloc]
+[@@noalloc]
 
 let nr_events = evtchn_get_nr_events ()
 let event_cb = Array.init nr_events (fun _ -> Lwt_dllist.create ())
@@ -43,11 +43,8 @@ let program_start = min_int
 type port = { mutable counter : event; c : unit Lwt_condition.t }
 
 let ports =
-  Array.init nr_events (fun port ->
-      {
-        counter = program_start;
-        c = MProf.Trace.named_condition ("port-" ^ string_of_int port);
-      })
+  Array.init nr_events (fun _port ->
+      { counter = program_start; c = Lwt_condition.create () })
 
 let dump () =
   Printf.printf "Number of received event channel events:\n";
@@ -75,7 +72,7 @@ let after evtchn counter =
 let wait evtchn =
   if Eventchn.is_valid evtchn then (
     let port = Eventchn.to_int evtchn in
-    let th, u = MProf.Trace.named_task ("wait-on-port-" ^ string_of_int port) in
+    let th, u = Lwt.task () in
     let node = Lwt_dllist.add_l u event_cb.(port) in
     Lwt.on_cancel th (fun _ -> Lwt_dllist.remove node);
     th)
