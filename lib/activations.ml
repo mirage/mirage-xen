@@ -16,11 +16,11 @@
 open Lwt.Infix
 
 external evtchn_get_nr_events : unit -> int = "mirage_xen_evtchn_get_nr_events"
-  [@@noalloc]
+[@@noalloc]
 
 external evtchn_test_and_clear : int -> bool
   = "mirage_xen_evtchn_test_and_clear"
-  [@@noalloc]
+[@@noalloc]
 
 let nr_events = evtchn_get_nr_events ()
 let event_cb = Array.init nr_events (fun _ -> Lwt_dllist.create ())
@@ -44,10 +44,7 @@ type port = { mutable counter : event; c : unit Lwt_condition.t }
 
 let ports =
   Array.init nr_events (fun _port ->
-      {
-        counter = program_start;
-        c = Lwt_condition.create ();
-      })
+      { counter = program_start; c = Lwt_condition.create () })
 
 let dump () =
   Printf.printf "Number of received event channel events:\n";

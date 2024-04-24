@@ -77,9 +77,7 @@ module IO = struct
   let read t buf ofs len =
     let rec loop event =
       let n = Xenstore_ring.Ring.Front.unsafe_read t.page buf ofs len in
-      if n = 0 then (
-        Activations.after t.evtchn event >>= fun event ->
-        loop event)
+      if n = 0 then Activations.after t.evtchn event >>= fun event -> loop event
       else (
         Eventchn.notify h t.evtchn;
         return n)
@@ -91,9 +89,9 @@ module IO = struct
     let rec loop event buf ofs len =
       let n = Xenstore_ring.Ring.Front.unsafe_write t.page buf ofs len in
       if n > 0 then Eventchn.notify h t.evtchn;
-      if n < len then (
+      if n < len then
         Activations.after t.evtchn event >>= fun event ->
-        loop event buf (ofs + n) (len - n))
+        loop event buf (ofs + n) (len - n)
       else return ()
     in
     loop Activations.program_start buf ofs len

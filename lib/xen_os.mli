@@ -337,8 +337,8 @@ module Xen : sig
 
     val get_n_nonblock : int -> Gntref.t list
     (** [get_n_nonblock count] is a list of grant table indices of length
-        [count], or [\[\]] if there if the table is too full to accomodate
-        [count] new grant references. *)
+        [count], or [[]] if there if the table is too full to accomodate [count]
+        new grant references. *)
 
     val num_free_grants : unit -> int
     (** [num_free_grants ()] returns the number of instantaneously free grant

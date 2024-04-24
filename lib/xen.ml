@@ -126,9 +126,7 @@ module Export = struct
     | None -> ()
     | Some u -> Lwt.wakeup u ()
 
-  let put r =
-    put_no_count r
-
+  let put r = put_no_count r
   let num_free_grants () = Queue.length free_list
 
   let rec get () =
@@ -138,8 +136,7 @@ module Export = struct
         let node = Lwt_dllist.add_r u free_list_waiters in
         Lwt.on_cancel th (fun () -> Lwt_dllist.remove node);
         th >>= fun () -> get ()
-    | false ->
-        return (Queue.pop free_list)
+    | false -> return (Queue.pop free_list)
 
   let get_n num =
     let rec gen_gnts num acc =

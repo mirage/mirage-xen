@@ -22,10 +22,10 @@
  *)
 
 external evtchn_block_domain : Time.t -> unit = "mirage_xen_evtchn_block_domain"
-  [@@noalloc]
+[@@noalloc]
 
 external evtchn_demux_pending : unit -> bool = "mirage_xen_evtchn_demux_pending"
-  [@@noalloc]
+[@@noalloc]
 
 let evtchn = Eventchn.init ()
 
