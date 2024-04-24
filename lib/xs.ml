@@ -79,7 +79,6 @@ module IO = struct
       let n = Xenstore_ring.Ring.Front.unsafe_read t.page buf ofs len in
       if n = 0 then (
         Activations.after t.evtchn event >>= fun event ->
-        MProf.Trace.label "Xs.read waiting";
         loop event)
       else (
         Eventchn.notify h t.evtchn;
@@ -94,7 +93,6 @@ module IO = struct
       if n > 0 then Eventchn.notify h t.evtchn;
       if n < len then (
         Activations.after t.evtchn event >>= fun event ->
-        MProf.Trace.label "Xs.write waiting";
         loop event buf (ofs + n) (len - n))
       else return ()
     in

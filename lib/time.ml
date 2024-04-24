@@ -56,7 +56,7 @@ let sleep_queue =
 let new_sleeps = ref []
 
 let sleep_ns d =
-  let res, w = MProf.Trace.named_task "sleep" in
+  let res, w = Lwt.task () in
   let t = Int64.add (time ()) d in
   let sleeper = { time = t; canceled = false; thread = w } in
   new_sleeps := sleeper :: !new_sleeps;

@@ -119,7 +119,6 @@ module Export = struct
   let mapping t = t.mapping
   let free_list : Gntref.t Queue.t = Queue.create ()
   let free_list_waiters = Lwt_dllist.create ()
-  let count_gntref = MProf.Counter.make ~name:"gntref"
 
   let put_no_count r =
     Queue.push r free_list;
@@ -128,7 +127,6 @@ module Export = struct
     | Some u -> Lwt.wakeup u ()
 
   let put r =
-    MProf.Counter.increase count_gntref (-1);
     put_no_count r
 
   let num_free_grants () = Queue.length free_list
@@ -136,12 +134,11 @@ module Export = struct
   let rec get () =
     match Queue.is_empty free_list with
     | true ->
-        let th, u = MProf.Trace.named_task "Wait for free gnt" in
+        let th, u = Lwt.task () in
         let node = Lwt_dllist.add_r u free_list_waiters in
         Lwt.on_cancel th (fun () -> Lwt_dllist.remove node);
         th >>= fun () -> get ()
     | false ->
-        MProf.Counter.increase count_gntref 1;
         return (Queue.pop free_list)
 
   let get_n num =
@@ -187,7 +184,6 @@ module Export = struct
     = "mirage_xen_gnttab_grant_access"
 
   let grant_access ~domid ~writable gntref page =
-    MProf.Trace.label "Gntshr.grant_access";
     if exports.(gntref) <> None then
       Fmt.invalid_arg "Grant %a is already in use!" Gntref.pp gntref;
     exports.(gntref) <- Some page;
@@ -200,7 +196,6 @@ module Export = struct
   external try_end_access : Gntref.t -> bool = "mirage_xen_gnttab_end_access"
 
   let try_end_access ~release_ref g =
-    MProf.Trace.label "Gntshr.end_access";
     if try_end_access g then (
       exports.(g) <- None;
       if release_ref then put g;

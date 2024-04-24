@@ -43,10 +43,10 @@ let program_start = min_int
 type port = { mutable counter : event; c : unit Lwt_condition.t }
 
 let ports =
-  Array.init nr_events (fun port ->
+  Array.init nr_events (fun _port ->
       {
         counter = program_start;
-        c = MProf.Trace.named_condition ("port-" ^ string_of_int port);
+        c = Lwt_condition.create ();
       })
 
 let dump () =
@@ -75,7 +75,7 @@ let after evtchn counter =
 let wait evtchn =
   if Eventchn.is_valid evtchn then (
     let port = Eventchn.to_int evtchn in
-    let th, u = MProf.Trace.named_task ("wait-on-port-" ^ string_of_int port) in
+    let th, u = Lwt.task () in
     let node = Lwt_dllist.add_l u event_cb.(port) in
     Lwt.on_cancel th (fun _ -> Lwt_dllist.remove node);
     th)
