@@ -1,3 +1,9 @@
+## v8.0.3 (2024-04-29)
+
+* Time: remove Timeout exception, and unused timeout and with_timeout functions
+  (#52 @hannesm)
+* Remove mirage-profile dependency (#53 @hannesm)
+
 ## v8.0.2 (2023-03-03)
 
 * Provide Memory.metrics, a metrics source. Remove Mm.metrics metrics source.
