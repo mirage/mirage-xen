@@ -28,6 +28,7 @@ depends: [
   "duration"
   "metrics"
   "metrics-lwt" {>= "0.2.0"}
+  "mirage-time"
 ]
 available: [
   (arch = "x86_64" ) &
