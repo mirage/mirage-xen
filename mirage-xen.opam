@@ -21,14 +21,14 @@ depends: [
   "xenstore" {>= "1.2.5"}
   "lwt-dllist"
   "io-page" {>= "2.4.0"}
-  "mirage-runtime" {>= "4.0"}
+  "mirage-runtime" {>= "4.6.0"}
   "logs"
   "fmt" {>= "0.8.5"}
   "bheap" {>= "2.0.0"}
   "duration"
   "metrics"
   "metrics-lwt" {>= "0.2.0"}
-  "mirage-time"
+  "mirage-time" {>= "4.0.0"}
 ]
 available: [
   (arch = "x86_64" ) &
