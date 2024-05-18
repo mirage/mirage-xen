@@ -70,11 +70,6 @@ module Memory : sig
       registered with [Metrics_lwt.periodically] (with [quick] set to [true]. *)
 end
 
-module Time : sig
-  val sleep_ns : int64 -> unit Lwt.t
-  (** [sleep_ns d] Block the current thread for [n] nanoseconds. *)
-end
-
 module Xs : sig
   (** Xenstore client. *)
 

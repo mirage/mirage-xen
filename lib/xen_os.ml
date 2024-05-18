@@ -5,6 +5,5 @@ module Generation = Generation
 module Lifecycle = Lifecycle
 module Main = Main
 module Memory = Memory
-module Time = Time
 module Xen = Xen
 module Xs = Xs
