@@ -28,7 +28,7 @@ depends: [
   "duration"
   "metrics"
   "metrics-lwt" {>= "0.2.0"}
-  "mirage-time" {>= "4.0.0"}
+  "mirage-sleep" {>= "4.0.0"}
 ]
 available: [
   (arch = "x86_64" ) &
