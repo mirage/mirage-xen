@@ -31,35 +31,20 @@ type t = int64
    | Sleepers                                                        |
    +-----------------------------------------------------------------+ *)
 
-type sleep = { time : t; mutable canceled : bool; thread : unit Lwt.u }
-
 module SleepQueue = Binary_heap.Make (struct
-  type t = sleep
+  type t = Mirage_sleep.t
 
-  let compare { time = t1; _ } { time = t2; _ } = compare t1 t2
+  let compare Mirage_sleep.{ time = t1; _ } Mirage_sleep.{ time = t2; _ } =
+    compare t1 t2
 end)
 
 (* Threads waiting for a timeout to expire: *)
 let sleep_queue =
   let dummy =
-    { time = time (); canceled = false; thread = Lwt.wait () |> snd }
+    Mirage_sleep.
+      { time = time (); canceled = false; thread = Lwt.wait () |> snd }
   in
   SleepQueue.create ~dummy 0
-
-(* Sleepers added since the last iteration of the main loop:
-
-   They are not added immediatly to the main sleep queue in order to
-   prevent them from being wakeup immediatly by [restart_threads].
-*)
-let new_sleeps = ref []
-
-let sleep_ns d =
-  let res, w = Lwt.task () in
-  let t = Int64.add (time ()) d in
-  let sleeper = { time = t; canceled = false; thread = w } in
-  new_sleeps := sleeper :: !new_sleeps;
-  Lwt.on_cancel res (fun _ -> sleeper.canceled <- true);
-  res
 
 let in_the_past now t = t = 0L || t <= now ()
 
@@ -90,6 +75,7 @@ let rec get_next_timeout () =
 let select_next () =
   (* Transfer all sleepers added since the last iteration to the main
      sleep queue: *)
-  List.iter (fun e -> SleepQueue.add sleep_queue e) !new_sleeps;
-  new_sleeps := [];
+  List.iter
+    (fun e -> SleepQueue.add sleep_queue e)
+    (Mirage_sleep.new_sleepers ());
   get_next_timeout ()

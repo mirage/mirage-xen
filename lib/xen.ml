@@ -219,13 +219,14 @@ module Export = struct
     match try_end_access ~release_ref g with
     | Ok () -> Lwt.return_unit
     | Error `Busy ->
-        Time.sleep_ns ten_seconds_in_ns >>= fun () -> end_access ~release_ref g
+        Mirage_sleep.ns ten_seconds_in_ns >>= fun () ->
+        end_access ~release_ref g
 
   let rec unshare ~release_refs t =
     match try_unshare ~release_refs t with
     | Ok () -> Lwt.return_unit
     | Error `Busy ->
-        Time.sleep_ns ten_seconds_in_ns >>= fun () -> unshare ~release_refs t
+        Mirage_sleep.ns ten_seconds_in_ns >>= fun () -> unshare ~release_refs t
 
   let share_pages ~domid ~count ~writable =
     (* First allocate a list of n pages. *)
