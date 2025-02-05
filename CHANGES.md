@@ -1,3 +1,7 @@
+## v9.0.0 (2025-02-05)
+
+* Use dune-variants, sleeper storage is now in mirage-sleep (#54 @hannesm)
+
 ## v8.0.3 (2024-04-29)
 
 * Time: remove Timeout exception, and unused timeout and with_timeout functions
