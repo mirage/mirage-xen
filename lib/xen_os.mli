@@ -274,6 +274,50 @@ module Xen : sig
       ('a, [> `Msg of string ]) result Lwt.t
     (** [with_mapping grant ~writable f] maps [grant], calls [f] on the result,
         and then unmaps it. Returns [Error _] if the [map] operation fails. *)
+
+    (** {3 Copying without mapping} *)
+
+    val copy_from :
+      domid:int ->
+      gref:Gntref.t ->
+      src_off:int ->
+      dst:Io_page.t ->
+      dst_off:int ->
+      len:int ->
+      (unit, [> `Msg of string ]) result
+    (** [copy_from ~domid ~gref ~src_off ~dst ~dst_off ~len] asks the hypervisor
+        to copy [len] bytes out of the page [domid] has granted as [gref],
+        starting at [src_off], into [dst] at [dst_off].
+
+        Unlike {!map_exn} this touches no page tables, so it costs one hypercall
+        and no TLB invalidation, which makes it the cheap way to move bulk data
+        out of a foreign page. [domid] must have granted read access.
+
+        Xen names each endpoint as a frame plus an offset into it, which imposes
+        two things. The local buffer must be page aligned, hence {!Io_page.t}
+        rather than a bare [Cstruct.t]: the type is private and everything that
+        builds one aligns, so this cannot be got wrong. And one copy may not
+        cross a page boundary, which no type can express; that is checked at run
+        time and reported as [Error]. Transfers spanning several pages must
+        therefore be issued a page at a time, which is what [src_off], [dst_off]
+        and [len] are for. *)
+
+    val copy_to :
+      src:Io_page.t ->
+      src_off:int ->
+      domid:int ->
+      gref:Gntref.t ->
+      dst_off:int ->
+      len:int ->
+      (unit, [> `Msg of string ]) result
+    (** [copy_to ~src ~src_off ~domid ~gref ~dst_off ~len] is {!copy_from} in
+        the other direction: [len] bytes from [src] at [src_off] into the page
+        [domid] has granted as [gref], at [dst_off]. [domid] must have granted
+        write access.
+
+        Only those [len] bytes reach the foreign page; the rest of it is left as
+        it was. The same alignment and page-crossing rules as {!copy_from}
+        apply. *)
   end
 
   (** {2 Offering pages to foreign domains} *)

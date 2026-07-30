@@ -110,6 +110,32 @@ module Import = struct
           (fun () ->
             Local_mapping.unmap_exn mapping;
             Lwt.return_unit)
+
+  (* Hypervisor-mediated copy, as an alternative to mapping a grant, copying and
+     unmapping it again. It costs one hypercall instead of two and touches no
+     page tables, so it avoids the TLB invalidation that dominates the map/unmap
+     pair. This is how Linux's netback moves packet data. *)
+
+  external copy_stub :
+    Io_page.t -> int -> int -> Gntref.t -> int -> int -> bool -> int
+    = "mirage_xen_gnttab_copy_bytecode" "mirage_xen_gnttab_copy_native"
+
+  (* The stub answers 0, or the negated Xen GNTST_* status. Taking Io_page.t
+     rather than a bare buffer puts the page alignment Xen requires in the type:
+     it is private, and every way of building one aligns. What a type cannot
+     express is that [off + len] stays inside one page, so the stub checks that
+     and answers GNTST_bad_copy_arg if it does not. *)
+  let copy_result = function
+    | 0 -> Ok ()
+    | status ->
+        Error
+          (`Msg (Printf.sprintf "grant copy failed with status %d" (-status)))
+
+  let copy_from ~domid ~gref ~src_off ~dst ~dst_off ~len =
+    copy_result (copy_stub dst dst_off domid gref src_off len false)
+
+  let copy_to ~src ~src_off ~domid ~gref ~dst_off ~len =
+    copy_result (copy_stub src src_off domid gref dst_off len true)
 end
 
 module Export = struct
