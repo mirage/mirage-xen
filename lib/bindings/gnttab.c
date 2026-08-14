@@ -402,7 +402,7 @@ mirage_xen_gnttab_copy_native(value v_local, value v_local_off, value v_domid,
     }
     op.len = len;
 
-    int rc = hypercall_gnttab_copy(&op, 1);
+    int rc = hypercall_gnttab_copy(&op);
 
     DPRINTF(2, "(gref = 0x%x domid = 0x%x remote_off = %d len = %d to_remote = %d"
             " local = 0x%lx rc = %d)\n", Int_val(v_gref), Int_val(v_domid),
