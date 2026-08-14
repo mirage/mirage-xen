@@ -1,3 +1,10 @@
+## v9.0.1 (2026-08-14)
+
+* Add Import.copy_from / Import.copy_to, hypervisor-mediated grant copy.
+  These copy between one of our own frames and a page another domain has granted
+  us. Much faster than the previous approach for e.g. the qubes-mirage-firewall
+  (#56 @palainp)
+
 ## v9.0.0 (2025-02-05)
 
 * Use dune-variants, sleeper storage is now in mirage-sleep (#54 @hannesm)
