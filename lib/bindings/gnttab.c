@@ -378,6 +378,11 @@ mirage_xen_gnttab_copy_native(value v_local, value v_local_off, value v_domid,
      * to be page aligned, which no type on that side can promise.
      * The window also has to stay inside the buffer, which is a separate
      * matter: an Io_page may span several pages.
+     *
+     * So the tests below ensure that:
+     *   - all int values are non-negative (and the length is at most PAGE_SIZE)
+     *   - remote offset + length fits inside a single page
+     *   - local offset + length fits inside the local buffer
      */
     if (len < 0 || remote_off < 0 || local_off < 0
         || len > PAGE_SIZE || remote_off + len > PAGE_SIZE
@@ -385,6 +390,12 @@ mirage_xen_gnttab_copy_native(value v_local, value v_local_off, value v_domid,
         CAMLreturn(Val_int(-GNTST_bad_copy_arg));
 
     uint64_t addr = (uint64_t)Caml_ba_data_val(v_local) + local_off;
+    /*
+     * Split out because the page boundary is only visible once the offset is
+     * resolved against the buffer's own address.
+     * So this last test ensures that:
+     *   - local offset + length does not cross a page boundary
+     */
     if ((addr & (PAGE_SIZE - 1)) + len > PAGE_SIZE)
         CAMLreturn(Val_int(-GNTST_bad_copy_arg));
 
