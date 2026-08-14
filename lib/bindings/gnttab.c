@@ -365,10 +365,10 @@ mirage_xen_gnttab_copy_native(value v_local, value v_local_off, value v_domid,
     CAMLparam5(v_local, v_local_off, v_domid, v_gref, v_remote_off);
     CAMLxparam2(v_len, v_to_remote);
 
-    uint64_t addr = (uint64_t)Caml_ba_data_val(v_local) + Int_val(v_local_off);
-    size_t len = Int_val(v_len);
-    size_t remote_off = Int_val(v_remote_off);
-    gnttab_copy_t op;
+    intnat local_off = Int_val(v_local_off);
+    intnat len = Int_val(v_len);
+    intnat remote_off = Int_val(v_remote_off);
+    intnat local_size = Caml_ba_array_val(v_local)->dim[0];
 
     /*
      * Each endpoint is a frame plus an offset, so neither may cross a page
@@ -376,10 +376,19 @@ mirage_xen_gnttab_copy_native(value v_local, value v_local_off, value v_domid,
      * absolute address says where the local page boundary falls: a caller's
      * buffer offset tells us nothing about it unless the buffer itself happens
      * to be page aligned, which no type on that side can promise.
+     * The window also has to stay inside the buffer, which is a separate
+     * matter: an Io_page may span several pages.
      */
-    if (len > PAGE_SIZE || (addr & (PAGE_SIZE - 1)) + len > PAGE_SIZE
-            || remote_off + len > PAGE_SIZE)
+    if (len < 0 || remote_off < 0 || local_off < 0
+        || len > PAGE_SIZE || remote_off + len > PAGE_SIZE
+        || local_off + len > local_size)
         CAMLreturn(Val_int(-GNTST_bad_copy_arg));
+
+    uint64_t addr = (uint64_t)Caml_ba_data_val(v_local) + local_off;
+    if ((addr & (PAGE_SIZE - 1)) + len > PAGE_SIZE)
+        CAMLreturn(Val_int(-GNTST_bad_copy_arg));
+
+    gnttab_copy_t op;
 
     memset(&op, 0, sizeof(op));
 
