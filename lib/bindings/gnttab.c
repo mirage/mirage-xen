@@ -406,7 +406,7 @@ mirage_xen_gnttab_copy_native(value v_local, value v_local_off, value v_domid,
 
     DPRINTF(2, "(gref = 0x%x domid = 0x%x remote_off = %d len = %d to_remote = %d"
             " local = 0x%lx rc = %d)\n", Int_val(v_gref), Int_val(v_domid),
-            Int_val(v_remote_off), Int_val(v_len), Bool_val(v_to_remote), addr, rc);
+            remote_off, len, Bool_val(v_to_remote), addr, rc);
 
     CAMLreturn(Val_int(rc));
 }
