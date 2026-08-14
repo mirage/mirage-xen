@@ -182,16 +182,12 @@ static inline int hypercall_gnttab_unmap_grant_ref(uint64_t host_addr,
  * A successful hypercall only means the batch was accepted; every operation
  * carries its own status, so they all have to be inspected.
  */
-static inline int hypercall_gnttab_copy(gnttab_copy_t *ops, unsigned int count)
+static inline int hypercall_gnttab_copy(gnttab_copy_t *op)
 {
-    int rc = hypercall__grant_table_op(GNTTABOP_copy, ops, count);
-    if (rc != 0)
-        return rc;
-    for (unsigned int i = 0; i < count; i++) {
-        if (ops[i].status != GNTST_okay)
-            return -ops[i].status;
-    }
-    return 0;
+    int rc = hypercall__grant_table_op(GNTTABOP_copy, op, 1);
+    if (rc == 0 && op.status < 0)
+        return -op.status;
+    return rc;
 }
 
 static inline int hypercall_hvm_get_param(unsigned int idx, uint64_t *value)
