@@ -341,6 +341,104 @@ mirage_xen_gnttab_unmap(value v_unused_ctx, value v_mapping)
     CAMLreturn(Val_unit);
 }
 
+/*
+ * external copy:
+ *     Io_page.t -> int -> int -> Gntref.t -> int -> int -> bool -> int
+ *     local -> local_off -> domid -> gref -> remote_off -> len -> to_remote
+ *
+ * Copies [len] bytes between [local] at [local_off] and the page [domid]
+ * granted as [gref] at [remote_off], in the direction given by [to_remote].
+ * Returns 0 on success, otherwise the negated Xen GNTST_* status.
+ *
+ * Both endpoints are expressed as a frame plus an offset within it, so neither
+ * side may straddle a page boundary; the OCaml wrapper enforces that. The local
+ * frame number is the virtual address shifted down, which holds because solo5
+ * maps the guest identity (see gnttab_grant_access, which relies on the same
+ * thing to publish pages).
+ *
+ * Caller: OS.Xen.Import.copy_from / copy_to
+ */
+CAMLprim value
+mirage_xen_gnttab_copy_native(value v_local, value v_local_off, value v_domid,
+        value v_gref, value v_remote_off, value v_len, value v_to_remote)
+{
+    CAMLparam5(v_local, v_local_off, v_domid, v_gref, v_remote_off);
+    CAMLxparam2(v_len, v_to_remote);
+
+    intnat local_off = Int_val(v_local_off);
+    intnat len = Int_val(v_len);
+    intnat remote_off = Int_val(v_remote_off);
+    intnat local_size = Caml_ba_array_val(v_local)->dim[0];
+
+    /*
+     * Each endpoint is a frame plus an offset, so neither may cross a page
+     * boundary. This is checked here rather than in OCaml because only the
+     * absolute address says where the local page boundary falls: a caller's
+     * buffer offset tells us nothing about it unless the buffer itself happens
+     * to be page aligned, which no type on that side can promise.
+     * The window also has to stay inside the buffer, which is a separate
+     * matter: an Io_page may span several pages.
+     *
+     * So the tests below ensure that:
+     *   - all int values are non-negative (and the length is at most PAGE_SIZE)
+     *   - remote offset + length fits inside a single page
+     *   - local offset + length fits inside the local buffer
+     */
+    if (len < 0 || remote_off < 0 || local_off < 0
+        || len > PAGE_SIZE || remote_off + len > PAGE_SIZE
+        || local_off + len > local_size)
+        CAMLreturn(Val_int(-GNTST_bad_copy_arg));
+
+    uint64_t addr = (uint64_t)Caml_ba_data_val(v_local) + local_off;
+    /*
+     * Split out because the page boundary is only visible once the offset is
+     * resolved against the buffer's own address.
+     * So this last test ensures that:
+     *   - local offset + length does not cross a page boundary
+     */
+    if ((addr & (PAGE_SIZE - 1)) + len > PAGE_SIZE)
+        CAMLreturn(Val_int(-GNTST_bad_copy_arg));
+
+    gnttab_copy_t op;
+
+    memset(&op, 0, sizeof(op));
+
+    if (Bool_val(v_to_remote)) {
+        op.source.u.gmfn = addr >> PAGE_SHIFT;
+        op.source.domid = DOMID_SELF;
+        op.source.offset = addr & (PAGE_SIZE - 1);
+        op.dest.u.ref = Int_val(v_gref);
+        op.dest.domid = Int_val(v_domid);
+        op.dest.offset = remote_off;
+        op.flags = GNTCOPY_dest_gref;
+    } else {
+        op.source.u.ref = Int_val(v_gref);
+        op.source.domid = Int_val(v_domid);
+        op.source.offset = remote_off;
+        op.dest.u.gmfn = addr >> PAGE_SHIFT;
+        op.dest.domid = DOMID_SELF;
+        op.dest.offset = addr & (PAGE_SIZE - 1);
+        op.flags = GNTCOPY_source_gref;
+    }
+    op.len = len;
+
+    int rc = hypercall_gnttab_copy(&op);
+
+    DPRINTF(2, "(gref = 0x%x domid = 0x%x remote_off = %d len = %d to_remote = %d"
+            " local = 0x%lx rc = %d)\n", Int_val(v_gref), Int_val(v_domid),
+            remote_off, len, Bool_val(v_to_remote), addr, rc);
+
+    CAMLreturn(Val_int(rc));
+}
+
+CAMLprim value
+mirage_xen_gnttab_copy_bytecode(value *argv, int argn)
+{
+    assert(argn == 7);
+    return mirage_xen_gnttab_copy_native(argv[0], argv[1], argv[2], argv[3],
+            argv[4], argv[5], argv[6]);
+}
+
 CAMLprim value
 mirage_xen_gnttab_get_nr_reserved(value unit)
 {

@@ -173,6 +173,23 @@ static inline int hypercall_gnttab_unmap_grant_ref(uint64_t host_addr,
     return rc;
 }
 
+/*
+ * Hypervisor-mediated copy between a local frame and a page another domain has
+ * granted us access to. Unlike map_grant_ref this touches no page tables, so
+ * there is no TLB invalidation, and the hypercall takes an array so a batch of
+ * copies costs a single entry into the hypervisor (here only one operation).
+ *
+ * A successful hypercall only means the batch was accepted; every operation
+ * carries its own status, so they all have to be inspected.
+ */
+static inline int hypercall_gnttab_copy(gnttab_copy_t *op)
+{
+    int rc = hypercall__grant_table_op(GNTTABOP_copy, op, 1);
+    if (rc == 0 && op->status < 0)
+        return -op->status;
+    return rc;
+}
+
 static inline int hypercall_hvm_get_param(unsigned int idx, uint64_t *value)
 {
     xen_hvm_param_t p = {
